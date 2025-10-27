@@ -1,0 +1,22 @@
+include "types.fbs";
+
+table Sensor_ID {
+  id: uint;
+}
+
+
+// single reading from an imu
+table Positional_Readings {
+  // required metadata
+  id: Sensor_ID;
+  time: Timestamp;
+
+  // readings
+  aclr_x: Acceleration;
+  aclr_y: Acceleration;
+  aclr_z: Acceleration;
+
+  rot_x: Rotation;
+  rot_y: Rotation;
+  rot_z: Rotation;
+}

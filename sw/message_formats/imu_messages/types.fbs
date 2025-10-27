@@ -1,0 +1,12 @@
+/// Basic types used for imu and other readings
+table Acceleration {
+    val: uint;
+}
+
+table Rotation {
+    val: uint;
+}
+
+table Timestamp {
+    count: ulong;
+}
