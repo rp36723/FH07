@@ -8,8 +8,20 @@ Defines the basic messages used to talk over the bluetooth link.
 
 ## Building
 
-To build the library, use the flatc command tool. If I get around to it I may switch this to bazel/cmake/standardized makefile.
+To build the library, we use meson for both compilation and library inclusion.
+
+Make sure the meson build directory is initialized:
 
 ```Bash
-flatc -c --gen-all device_link.fbs 
+meson setup build
 ```
+
+Then compile with meson:
+
+```Bash
+meson compile -C build message_formats
+```
+
+## Including
+
+To include this library in other code, ensure the `meson.build` file lists `message_formats` as a dependency. From here it can be used as `#include "device_link_generated"`.
