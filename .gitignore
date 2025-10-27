@@ -2,3 +2,8 @@
 # build artifacts
 build/
 *_generated.*
+
+
+# Allow for only wrap files in subprojects
+/subprojects/*
+!/subprojects/*.wrap
