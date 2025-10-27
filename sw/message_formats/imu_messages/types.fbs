@@ -1,5 +1,4 @@
-
-
+/// Basic types used for imu and other readings
 table Acceleration {
     val: uint;
 }

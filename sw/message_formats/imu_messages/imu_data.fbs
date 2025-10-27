@@ -5,6 +5,7 @@ table Sensor_ID {
 }
 
 
+// single reading from an imu
 table Positional_Readings {
     id: Sensor_ID;
 
