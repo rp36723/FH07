@@ -1,0 +1,18 @@
+include "types.fbs";
+
+table Sensor_ID {
+    id: uint;
+}
+
+
+table Positional_Readings {
+    id: Sensor_ID;
+
+    aclr_x: Acceleration;
+    aclr_y: Acceleration;
+    aclr_z: Acceleration;
+
+    rot_x: Rotation;
+    rot_y: Rotation;
+    rot_z: Rotation;
+}

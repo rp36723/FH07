@@ -1,0 +1,9 @@
+
+
+table Acceleration {
+    val: uint;
+}
+
+table Rotation {
+    val: uint;
+}

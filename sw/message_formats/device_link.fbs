@@ -1,0 +1,5 @@
+include "imu_messages/imu_data.fbs";
+
+table Phone_Packet {
+    readings: [Positional_Readings];
+}
