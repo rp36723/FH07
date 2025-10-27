@@ -1,19 +1,22 @@
 include "types.fbs";
 
 table Sensor_ID {
-    id: uint;
+  id: uint;
 }
 
 
 // single reading from an imu
 table Positional_Readings {
-    id: Sensor_ID;
+  // required metadata
+  id: Sensor_ID;
+  time: Timestamp;
 
-    aclr_x: Acceleration;
-    aclr_y: Acceleration;
-    aclr_z: Acceleration;
+  // readings
+  aclr_x: Acceleration;
+  aclr_y: Acceleration;
+  aclr_z: Acceleration;
 
-    rot_x: Rotation;
-    rot_y: Rotation;
-    rot_z: Rotation;
+  rot_x: Rotation;
+  rot_y: Rotation;
+  rot_z: Rotation;
 }

@@ -6,3 +6,7 @@ table Acceleration {
 table Rotation {
     val: uint;
 }
+
+table Timestamp {
+    count: ulong;
+}
