@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Posture Monitor – iOS Mockup</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        system-ui, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #1f2937 0%, #020617 60%);
+      color: #111827;
+    }
+
+    /* Phone frame */
+    .phone-shell {
+      background: #020617;
+      padding: 18px;
+      border-radius: 48px;
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.7);
+      border: 2px solid rgba(148, 163, 184, 0.8);
+      position: relative;
+    }
+
+    .phone-shell::before {
+      content: "";
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 110px;
+      height: 18px;
+      background: #020617;
+      border-radius: 12px;
+    }
+
+    .phone-screen {
+      width: 390px; /* like iPhone 14 */
+      height: 844px;
+      border-radius: 38px;
+      overflow: hidden;
+      background: #f9fafb;
+      position: relative;
+    }
+
+    /* Fake iOS status bar */
+    .status-bar {
+      height: 50px;
+      padding: 10px 14px 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #111827;
+    }
+
+    .status-bar-left {
+      font-weight: 600;
+    }
+
+    .status-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-pills {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .status-dot,
+    .status-bar-signal,
+    .status-battery {
+      border-radius: 999px;
+      background: #111827;
+    }
+
+    .status-bar-signal {
+      width: 14px;
+      height: 9px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .status-bar-signal::before,
+    .status-bar-signal::after {
+      content: "";
+      position: absolute;
+      bottom: 1px;
+      width: 2px;
+      background: #f9fafb;
+    }
+
+    .status-bar-signal::before {
+      left: 3px;
+      height: 5px;
+    }
+
+    .status-bar-signal::after {
+      left: 7px;
+      height: 7px;
+    }
+
+    .status-battery {
+      width: 20px;
+      height: 9px;
+      border-radius: 3px;
+      position: relative;
+    }
+
+    .status-battery::before {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      border-radius: 2px;
+      background: linear-gradient(to right, #22c55e 0%, #bbf7d0 70%);
+    }
+
+    /* App header */
+    .app-header {
+      padding: 4px 18px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .app-title {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .app-subtitle {
+      padding: 0 18px 6px;
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .notification-toggle {
+      font-size: 12px;
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .notification-toggle span.icon {
+      font-size: 14px;
+    }
+
+    .notification-toggle:active {
+      transform: scale(0.97);
+    }
+
+    .app-body {
+      padding: 8px 12px 12px;
+      height: calc(100% - 100px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 14px 14px 12px;
+      box-shadow: 0 12px 25px rgba(15, 23, 42, 0.05);
+      border: 1px solid #e5e7eb;
+      margin-bottom: 12px;
+    }
+
+    .card-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .chip-muted {
+      font-size: 11px;
+      color: #6b7280;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: #f3f4f6;
+    }
+
+    .sensor-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sensor-item {
+      padding: 10px 10px 9px;
+      border-radius: 14px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+    }
+
+    .sensor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .sensor-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #111827;
+    }
+
+    .status-pill {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+    }
+
+    .status-pill.pending {
+      color: #6b7280;
+      background: #e5e7eb;
+      border-color: #e5e7eb;
+    }
+
+    .status-pill.ok {
+      color: #15803d;
+      background: #dcfce7;
+      border-color: #bbf7d0;
+    }
+
+    .status-pill.alert {
+      color: #b91c1c;
+      background: #fee2e2;
+      border-color: #fecaca;
+      animation: alertPulse 0.8s ease-out;
+    }
+
+    @keyframes alertPulse {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.6);
+      }
+      70% {
+        transform: scale(1.03);
+        box-shadow: 0 0 0 8px rgba(248, 113, 113, 0);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(248, 113, 113, 0);
+      }
+    }
+
+    .sensor-fields {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 8px;
+    }
+
+    .field-label {
+      font-size: 11px;
+      color: #6b7280;
+      margin-bottom: 2px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    input[type="number"] {
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      padding: 8px 10px;
+      font-size: 13px;
+      outline: none;
+      background: #ffffff;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input[type="number"]:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.3);
+    }
+
+    input[type="number"]::placeholder {
+      color: #9ca3af;
+    }
+
+    .hint-text {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    .bottom-bar {
+      position: absolute;
+      bottom: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 132px;
+      height: 4px;
+      border-radius: 999px;
+      background: #d1d5db;
+    }
+
+    /* Toast notifications inside the phone */
+    #toast-container {
+      position: absolute;
+      top: 72px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .toast {
+      pointer-events: auto;
+      background: rgba(15, 23, 42, 0.96);
+      color: #e5e7eb;
+      padding: 9px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      max-width: 86%;
+      box-shadow: 0 15px 40px rgba(15, 23, 42, 0.7);
+      opacity: 0;
+      transform: translateY(-8px);
+      transition: all 0.16s ease-out;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast-title {
+      font-weight: 600;
+      margin-bottom: 2px;
+      font-size: 12px;
+    }
+
+    .toast-body {
+      font-size: 11px;
+      color: #cbd5f5;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        background: #020617;
+      }
+
+      .phone-shell {
+        padding: 0;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+      }
+
+      .phone-screen {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-shell">
+    <div class="phone-screen">
+      <div id="toast-container"></div>
+
+      <div class="status-bar">
+        <div class="status-bar-left">9:41</div>
+        <div class="status-bar-right">
+          <div class="status-bar-signal"></div>
+          <div class="status-battery"></div>
+        </div>
+      </div>
+
+      <div class="app-header">
+        <div class="app-title">Posture Monitor</div>
+        <button id="notify-permission-btn" class="notification-toggle">
+          <span class="icon">🔔</span>
+          <span>Enable</span>
+        </button>
+      </div>
+      <div class="app-subtitle">
+        Enter sensor readings; get an alert when a value moves more than its allowed change.
+      </div>
+
+      <div class="app-body">
+        <div class="card">
+          <div class="card-header-row">
+            <div class="card-title">Back sensors</div>
+            <div class="chip-muted">Baseline: first reading only</div>
+          </div>
+
+          <div class="sensor-list">
+            <div class="sensor-item" data-label="Upper back">
+              <div class="sensor-header">
+                <div class="sensor-name">Upper back</div>
+                <span class="status-pill pending">Waiting…</span>
+              </div>
+              <div class="sensor-fields">
+                <div class="field-group">
+                  <div class="field-label">Current reading</div>
+                  <input
+                    class="sensor-value"
+                    type="number"
+                    step="0.1"
+                    placeholder="Enter value"
+                  />
+                </div>
+                <div class="field-group">
+                  <div class="field-label">Alert threshold (Δ)</div>
+                  <input
+                    class="sensor-threshold"
+                    type="number"
+                    step="0.1"
+                    placeholder="e.g. 5"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="sensor-item" data-label="Mid back">
+              <div class="sensor-header">
+                <div class="sensor-name">Mid back</div>
+                <span class="status-pill pending">Waiting…</span>
+              </div>
+              <div class="sensor-fields">
+                <div class="field-group">
+                  <div class="field-label">Current reading</div>
+                  <input
+                    class="sensor-value"
+                    type="number"
+                    step="0.1"
+                    placeholder="Enter value"
+                  />
+                </div>
+                <div class="field-group">
+                  <div class="field-label">Alert threshold (Δ)</div>
+                  <input
+                    class="sensor-threshold"
+                    type="number"
+                    step="0.1"
+                    placeholder="e.g. 5"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="sensor-item" data-label="Lower back">
+              <div class="sensor-header">
+                <div class="sensor-name">Lower back</div>
+                <span class="status-pill pending">Waiting…</span>
+              </div>
+              <div class="sensor-fields">
+                <div class="field-group">
+                  <div class="field-label">Current reading</div>
+                  <input
+                    class="sensor-value"
+                    type="number"
+                    step="0.1"
+                    placeholder="Enter value"
+                  />
+                </div>
+                <div class="field-group">
+                  <div class="field-label">Alert threshold (Δ)</div>
+                  <input
+                    class="sensor-threshold"
+                    type="number"
+                    step="0.1"
+                    placeholder="e.g. 5"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hint-text">
+            First valid value for each sensor becomes its baseline.
+            Example: if threshold is <b>5</b>, and the next reading changes by more than 5 units,
+            you’ll see an alert and a notification.
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-bar"></div>
+    </div>
+  </div>
+
+  <script>
+    // Toast notification inside the phone
+    function showToast(title, message) {
+      const container = document.getElementById("toast-container");
+      container.innerHTML = ""; // only one toast at a time
+
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.innerHTML = `
+        <div class="toast-title">${title}</div>
+        <div class="toast-body">${message}</div>
+      `;
+
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.add("show");
+      });
+
+      setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => {
+          if (toast.parentElement === container) {
+            container.removeChild(toast);
+          }
+        }, 180);
+      }, 3500);
+    }
+
+    // Optional system-level notifications (desktop/mobile OS)
+    function browserNotify(message) {
+      if (!("Notification" in window)) return;
+      if (Notification.permission === "granted") {
+        new Notification("Posture Alert", { body: message });
+      }
+    }
+
+    function triggerNotification(label, delta, threshold) {
+      const msg = `${label} moved by ${delta.toFixed(2)} (threshold ${threshold})`;
+      showToast("Posture alert", msg);
+      browserNotify(msg);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const sensorItems = document.querySelectorAll(".sensor-item");
+
+      sensorItems.forEach((item) => {
+        const label = item.dataset.label || "Sensor";
+        const valueInput = item.querySelector(".sensor-value");
+        const thresholdInput = item.querySelector(".sensor-threshold");
+        const statusEl = item.querySelector(".status-pill");
+
+        let lastValue = null;
+
+        valueInput.addEventListener("input", () => {
+          const newValue = parseFloat(valueInput.value);
+          const threshold = parseFloat(thresholdInput.value);
+
+          if (isNaN(newValue) || isNaN(threshold)) {
+            statusEl.textContent = "Waiting…";
+            statusEl.className = "status-pill pending";
+            lastValue = isNaN(newValue) ? null : newValue;
+            return;
+          }
+
+          if (lastValue === null) {
+            lastValue = newValue;
+            statusEl.textContent = "Baseline set";
+            statusEl.className = "status-pill ok";
+            return;
+          }
+
+          const delta = Math.abs(newValue - lastValue);
+
+          if (delta >= threshold) {
+            statusEl.textContent = `Alert (Δ ${delta.toFixed(1)})`;
+            statusEl.className = "status-pill alert";
+            triggerNotification(label, delta, threshold);
+          } else {
+            statusEl.textContent = `OK (Δ ${delta.toFixed(1)})`;
+            statusEl.className = "status-pill ok";
+          }
+
+          lastValue = newValue;
+        });
+      });
+
+      const permissionBtn = document.getElementById("notify-permission-btn");
+      if (!("Notification" in window)) {
+        permissionBtn.disabled = true;
+        permissionBtn.querySelector("span.icon").textContent = "🚫";
+        permissionBtn.querySelector("span:last-child").textContent = "Unavailable";
+      } else {
+        permissionBtn.addEventListener("click", async () => {
+          try {
+            const result = await Notification.requestPermission();
+            if (result === "granted") {
+              showToast(
+                "Notifications enabled",
+                "System notifications are now active."
+              );
+              permissionBtn.querySelector("span:last-child").textContent =
+                "On";
+            } else {
+              showToast(
+                "Notifications disabled",
+                "You can enable them later in Settings."
+              );
+              permissionBtn.querySelector("span:last-child").textContent =
+                "Off";
+            }
+          } catch (err) {
+            console.error(err);
+            showToast("Error", "Could not change notification settings.");
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
