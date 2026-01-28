@@ -9,6 +9,8 @@
 #include <zephyr/drivers/sensor.h>
 #include <stdio.h>
 
+#include <ble.h>
+
 static const char *now_str(void) {
   static char buf[16]; /* ...HH:MM:SS.MMM */
   uint32_t now = k_uptime_get_32();
