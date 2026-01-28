@@ -44,13 +44,17 @@ static int process_mpu6050(const struct device *dev) {
     rc = sensor_channel_get(dev, SENSOR_CHAN_DIE_TEMP, &temperature);
   }
   if (rc == 0) {
-    printf("[%s]:%g Cel\n"
-           "  accel %f %f %f m/s/s\n"
-           "  gyro  %f %f %f rad/s\n",
-           now_str(), sensor_value_to_double(&temperature),
-           sensor_value_to_double(&accel[0]), sensor_value_to_double(&accel[1]),
-           sensor_value_to_double(&accel[2]), sensor_value_to_double(&gyro[0]),
-           sensor_value_to_double(&gyro[1]), sensor_value_to_double(&gyro[2]));
+    // printf("[%s]:%g Cel\n"
+    //        "  accel %f %f %f m/s/s\n"
+    //        "  gyro  %f %f %f rad/s\n",
+    //        now_str(), sensor_value_to_double(&temperature),
+    //        sensor_value_to_double(&accel[0]),
+    //        sensor_value_to_double(&accel[1]),
+    //        sensor_value_to_double(&accel[2]),
+    //        sensor_value_to_double(&gyro[0]),
+    //        sensor_value_to_double(&gyro[1]),
+    //        sensor_value_to_double(&gyro[2]));
+    printf("%f\n", sensor_value_to_double(&gyro[0]));
   } else {
     printf("sample fetch/get failed: %d\n", rc);
   }
@@ -99,7 +103,7 @@ int main(void) {
     if (rc != 0) {
       break;
     }
-    k_sleep(K_SECONDS(1));
+    k_sleep(K_MSEC(100));
   }
 
   /* triggered runs with its own thread after exit */
