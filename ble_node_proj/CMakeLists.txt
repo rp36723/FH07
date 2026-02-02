@@ -3,4 +3,8 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 project(sample_node_proj)
 
+# Application sources
 target_sources(app PRIVATE src/main.c)
+
+# Add all libraries under lib/
+add_subdirectory(lib)
