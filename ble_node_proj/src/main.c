@@ -79,7 +79,7 @@ static void handle_mpu6050_drdy(const struct device *dev,
 
 int main(void) {
   const struct device *const mpu6050 = DEVICE_DT_GET_ONE(invensense_mpu6050);
-
+  printk("STARTING NON SECURE PARTITION\n");
   if (!device_is_ready(mpu6050)) {
     printf("Device %s is not ready\n", mpu6050->name);
     return 0;
