@@ -1,0 +1,34 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "62bb0011-0a7e-4eb0-868e-e75c2c4b5ec3")
+	(paper "A4")
+	(title_block
+		(title "FH07 BLE Node")
+		(date "2026-02-04")
+	)
+	(lib_symbols)
+	(hierarchical_label "SCL"
+		(shape input)
+		(at 205.74 55.88 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "3243d6cc-9039-4dc2-ae22-638cbe87dc63")
+	)
+	(hierarchical_label "SDA"
+		(shape input)
+		(at 205.74 50.8 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "824f8834-1c67-441b-988e-28709b186636")
+	)
+)

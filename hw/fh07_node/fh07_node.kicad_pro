@@ -412,6 +412,18 @@
     [
       "aea54c0a-0593-4c80-97cc-583e63973e87",
       "Root"
+    ],
+    [
+      "d389981d-ba8e-4d67-beea-f26bc49c75ef",
+      "MCU"
+    ],
+    [
+      "4cffed0e-7de8-4e1f-97a0-95aa9bd6ae00",
+      "Power"
+    ],
+    [
+      "f7042617-bbaf-4506-802a-37539c441d1d",
+      "Sensors"
     ]
   ],
   "text_variables": {}
