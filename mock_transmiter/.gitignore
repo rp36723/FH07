@@ -1,0 +1,17 @@
+# venv dir
+.venv
+
+# Another build dir for building the wheel
+*.egg-info/
+
+# cache dirs
+__pycache__/
+.uvcache/
+.tmp/
+
+# Build dir
+dist/
+
+# the output dir of the flatbuffer messages
+# it would be a good idea to recompile these so I'm not commiting them
+src/messages/
