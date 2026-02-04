@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "ME54BS01-1Y15TI")(type "Altium")(uri "${KIPRJMOD}/../Part_Libraries/ME54BS01-1Y15TI.Schlib")(options "")(descr ""))
+)
