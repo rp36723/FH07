@@ -7,3 +7,12 @@ build/
 # Allow for only wrap files in subprojects
 /subprojects/*
 !/subprojects/*.wrap
+
+# KiCad backup and temporary files
+*-bak
+*-backups/
+*.bak
+*.kicad_pcb-bak
+*.kicad_sch-bak
+*.zip
+fp-info-cache
