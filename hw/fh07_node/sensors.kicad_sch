@@ -919,7 +919,7 @@
 			(embedded_fonts no)
 		)
 	)
-	(text "BNO055 I2C addr = 0x28 (COM3=0)"
+	(text "BNO055 I2C addr = 0x28 (COM3=0)."
 		(exclude_from_sim no)
 		(at 125.984 70.612 0)
 		(effects
