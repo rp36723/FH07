@@ -9,6 +9,148 @@
 		(date "2026-02-04")
 	)
 	(lib_symbols
+		(symbol "Connector_Generic:Conn_01x02"
+			(pin_names
+				(offset 1.016)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "J"
+				(at 0 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Conn_01x02"
+				(at 0 -5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "connector"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "Connector*:*_1x??_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Conn_01x02_1_1"
+				(rectangle
+					(start -1.27 1.27)
+					(end 1.27 -3.81)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(rectangle
+					(start -1.27 0.127)
+					(end 0 -0.127)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.27 -2.413)
+					(end 0 -2.667)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -5.08 0 0)
+					(length 3.81)
+					(name "Pin_1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -2.54 0)
+					(length 3.81)
+					(name "Pin_2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "Device:C_Small"
 			(pin_numbers
 				(hide yes)
@@ -503,7 +645,7 @@
 	)
 	(text "We'll want to use a lower power logic level\n"
 		(exclude_from_sim no)
-		(at 136.906 17.272 0)
+		(at 129.286 43.942 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -583,6 +725,16 @@
 	)
 	(wire
 		(pts
+			(xy 101.6 88.9) (xy 100.33 88.9)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0c63e44e-37eb-42cc-8c56-0c1c8872ba85")
+	)
+	(wire
+		(pts
 			(xy 203.2 30.48) (xy 215.9 30.48)
 		)
 		(stroke
@@ -653,13 +805,33 @@
 	)
 	(wire
 		(pts
-			(xy 133.35 26.67) (xy 139.7 26.67)
+			(xy 125.73 53.34) (xy 132.08 53.34)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
 		(uuid "8c667a71-2146-4f2f-9283-afe1e1fae2b6")
+	)
+	(wire
+		(pts
+			(xy 97.79 87.63) (xy 97.79 88.9)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8ecd245c-ae75-42bd-a9c5-7e240a03a9b9")
+	)
+	(wire
+		(pts
+			(xy 102.87 87.63) (xy 101.6 87.63)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9f63a3aa-b229-4bc1-86d1-0a7d7748990b")
 	)
 	(wire
 		(pts
@@ -683,6 +855,26 @@
 	)
 	(wire
 		(pts
+			(xy 96.52 87.63) (xy 97.79 87.63)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c9d933d1-32f5-4f42-90cb-0aec7607fab1")
+	)
+	(wire
+		(pts
+			(xy 101.6 87.63) (xy 101.6 88.9)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cbab6880-a2b0-4c14-9cd9-97a87c07424a")
+	)
+	(wire
+		(pts
 			(xy 241.3 30.48) (xy 254 30.48)
 		)
 		(stroke
@@ -703,7 +895,7 @@
 	)
 	(symbol
 		(lib_id "power:VCC")
-		(at 139.7 26.67 0)
+		(at 132.08 53.34 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -712,7 +904,7 @@
 		(fields_autoplaced yes)
 		(uuid "315a809e-7db1-4632-a41b-ac3490f7abfa")
 		(property "Reference" "#PWR02"
-			(at 139.7 30.48 0)
+			(at 132.08 57.15 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -721,7 +913,7 @@
 			)
 		)
 		(property "Value" "VCC"
-			(at 139.7 21.59 0)
+			(at 132.08 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -729,7 +921,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 139.7 26.67 0)
+			(at 132.08 53.34 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -738,7 +930,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 139.7 26.67 0)
+			(at 132.08 53.34 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -747,7 +939,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"VCC\""
-			(at 139.7 26.67 0)
+			(at 132.08 53.34 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -795,7 +987,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder"
 			(at 228.6 27.94 0)
 			(effects
 				(font
@@ -865,7 +1057,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder"
 			(at 241.3 27.94 0)
 			(effects
 				(font
@@ -935,7 +1127,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder"
 			(at 203.2 27.94 0)
 			(effects
 				(font
@@ -978,6 +1170,142 @@
 		)
 	)
 	(symbol
+		(lib_id "Connector_Generic:Conn_01x02")
+		(at 100.33 93.98 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "69e495b1-0b20-487c-b796-7778f53de903")
+		(property "Reference" "J2"
+			(at 102.87 92.7099 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "Conn_01x02"
+			(at 102.87 95.2499 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Connector_Molex:Molex_Micro-Fit_3.0_43650-0221_1x02_P3.00mm_Vertical"
+			(at 100.33 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 100.33 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"
+			(at 100.33 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "f7f38725-c1a2-4fcf-97ef-51bb75e29499")
+		)
+		(pin "1"
+			(uuid "c440cb1f-a39a-4c65-935d-02b0989f6edd")
+		)
+		(instances
+			(project ""
+				(path "/aea54c0a-0593-4c80-97cc-583e63973e87/4cffed0e-7de8-4e1f-97a0-95aa9bd6ae00"
+					(reference "J2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 102.87 87.63 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "6a4d7f86-82c3-458f-975d-09e01aec102c")
+		(property "Reference" "#PWR012"
+			(at 102.87 81.28 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 102.87 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 102.87 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 102.87 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 102.87 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "4d0a4310-aa88-4b0c-b4c1-19269284a1d6")
+		)
+		(instances
+			(project ""
+				(path "/aea54c0a-0593-4c80-97cc-583e63973e87/4cffed0e-7de8-4e1f-97a0-95aa9bd6ae00"
+					(reference "#PWR012")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:C_Small")
 		(at 265.43 27.94 0)
 		(unit 1)
@@ -1005,7 +1333,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder"
 			(at 265.43 27.94 0)
 			(effects
 				(font
@@ -1075,7 +1403,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder"
 			(at 190.5 27.94 0)
 			(effects
 				(font
@@ -1118,17 +1446,17 @@
 		)
 	)
 	(symbol
-		(lib_id "power:+2V5")
-		(at 133.35 26.67 0)
+		(lib_id "power:VCC")
+		(at 228.6 25.4 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "948aa412-bae3-49d3-b99a-947e02f980f7")
-		(property "Reference" "#PWR01"
-			(at 133.35 30.48 0)
+		(uuid "8bc02a22-0b31-42db-8abc-8721a8c16bf3")
+		(property "Reference" "#PWR010"
+			(at 228.6 29.21 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1136,8 +1464,8 @@
 				(hide yes)
 			)
 		)
-		(property "Value" "+2V5"
-			(at 133.35 21.59 0)
+		(property "Value" "VCC"
+			(at 228.6 20.32 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1145,7 +1473,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 133.35 26.67 0)
+			(at 228.6 25.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1154,7 +1482,73 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 133.35 26.67 0)
+			(at 228.6 25.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"VCC\""
+			(at 228.6 25.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "eb0508ae-b2cf-4549-827c-05578fb9f478")
+		)
+		(instances
+			(project ""
+				(path "/aea54c0a-0593-4c80-97cc-583e63973e87/4cffed0e-7de8-4e1f-97a0-95aa9bd6ae00"
+					(reference "#PWR010")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+2V5")
+		(at 125.73 53.34 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "948aa412-bae3-49d3-b99a-947e02f980f7")
+		(property "Reference" "#PWR01"
+			(at 125.73 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+2V5"
+			(at 125.73 48.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 125.73 53.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 125.73 53.34 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1163,7 +1557,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+2V5\""
-			(at 133.35 26.67 0)
+			(at 125.73 53.34 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1211,7 +1605,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder"
 			(at 254 27.94 0)
 			(effects
 				(font
@@ -1281,7 +1675,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder"
 			(at 215.9 27.94 0)
 			(effects
 				(font
@@ -1391,16 +1785,16 @@
 	)
 	(symbol
 		(lib_id "power:VCC")
-		(at 228.6 25.4 0)
+		(at 96.52 87.63 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "e080ef0a-3a95-410b-ac39-957b3116ce3a")
-		(property "Reference" "#PWR010"
-			(at 228.6 29.21 0)
+		(uuid "b025ff52-b2c1-4099-8e28-42ace60d731d")
+		(property "Reference" "#PWR011"
+			(at 96.52 91.44 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1409,7 +1803,7 @@
 			)
 		)
 		(property "Value" "VCC"
-			(at 228.6 20.32 0)
+			(at 96.52 82.55 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1417,7 +1811,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 228.6 25.4 0)
+			(at 96.52 87.63 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1426,7 +1820,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 228.6 25.4 0)
+			(at 96.52 87.63 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1435,7 +1829,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"VCC\""
-			(at 228.6 25.4 0)
+			(at 96.52 87.63 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1444,12 +1838,12 @@
 			)
 		)
 		(pin "1"
-			(uuid "eb0508ae-b2cf-4549-827c-05578fb9f478")
+			(uuid "60051ad7-b086-4754-8528-6f55c086ecb2")
 		)
 		(instances
-			(project ""
+			(project "fh07_node"
 				(path "/aea54c0a-0593-4c80-97cc-583e63973e87/4cffed0e-7de8-4e1f-97a0-95aa9bd6ae00"
-					(reference "#PWR010")
+					(reference "#PWR011")
 					(unit 1)
 				)
 			)
