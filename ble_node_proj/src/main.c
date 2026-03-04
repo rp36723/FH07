@@ -7,6 +7,8 @@
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/sensor.h>
+#include <errno.h>
+#include <stdint.h>
 #include <stdio.h>
 
 #include <ble.h>
@@ -56,7 +58,14 @@ static int process_mpu6050(const struct device *dev) {
     //        sensor_value_to_double(&gyro[0]),
     //        sensor_value_to_double(&gyro[1]),
     //        sensor_value_to_double(&gyro[2]));
+    const float gyro_x = (float)sensor_value_to_double(&gyro[0]);
+    int ble_err;
+
     printf("%f\n", sensor_value_to_double(&gyro[0]));
+    ble_err = ble_send_packet((const uint8_t *)&gyro_x, sizeof(gyro_x));
+    if (ble_err != 0 && ble_err != -ENOTCONN && ble_err != -EACCES) {
+      printf("BLE send failed: %d\n", ble_err);
+    }
   } else {
     printf("sample fetch/get failed: %d\n", rc);
   }
@@ -81,7 +90,26 @@ static void handle_mpu6050_drdy(const struct device *dev,
 
 int main(void) {
   const struct device *const mpu6050 = DEVICE_DT_GET_ONE(invensense_mpu6050);
+  const struct ble_config ble_cfg = {
+      .device_name = "FH07_Node",
+      .min_security_level = BLE_SECURITY_L2,
+      .rx_callback = NULL,
+  };
+  int ble_err;
+
   printk("STARTING NON SECURE PARTITION\n");
+
+  ble_err = ble_init(&ble_cfg);
+  if (ble_err != 0) {
+    printf("BLE init failed: %d\n", ble_err);
+    return 0;
+  }
+
+  ble_err = ble_enter_pairing_mode();
+  if (ble_err != 0) {
+    printf("BLE pairing mode failed: %d\n", ble_err);
+    return 0;
+  }
   if (!device_is_ready(mpu6050)) {
     printf("Device %s is not ready\n", mpu6050->name);
     return 0;
