@@ -1,5 +1,10 @@
 fn main() {
     println!("cargo:rerun-if-changed=sdkconfig.defaults");
+    println!("cargo:rerun-if-env-changed=BLE_IMU_BOARD");
+    println!("cargo:rerun-if-env-changed=BLE_IMU_SDA");
+    println!("cargo:rerun-if-env-changed=BLE_IMU_SCL");
+    println!("cargo:rerun-if-env-changed=BLE_IMU_ADDR");
+    println!("cargo:rerun-if-env-changed=BLE_IMU_I2C_HZ");
 
     let target = std::env::var("TARGET").unwrap_or_default();
     if target.contains("espidf") {

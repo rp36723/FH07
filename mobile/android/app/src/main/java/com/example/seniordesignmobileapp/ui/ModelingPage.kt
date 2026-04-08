@@ -23,16 +23,16 @@ fun ModelingPage(
         ActivitySetupCard(
             title = "Modeling Status",
             lines = listOf(
-                "This page is reserved for future model training, replay, inference tuning, or classification tooling.",
-                "For now, recorded sessions from the Export page are the main modeling input.",
+                "This page is intended to visualize the sensor nodes in 3D space and show how they relate to one another.",
+                "It is not primarily a model-training or classification page.",
             ),
         )
         ActivitySetupCard(
             title = "Near-Term Direction",
             lines = listOf(
-                "Replay exported sessions through the current analyzers.",
-                "Compare calibration baselines and score curves across real posture data.",
-                "Define how this app should interact with on-device vs offline models before building UI controls here.",
+                "Use live and recorded sensor data to place nodes in a shared 3D view.",
+                "Show node orientation and relative position clearly enough to inspect posture setups and calibration behavior.",
+                "Expand this page later once additional posture classifications and visualization needs are defined.",
             ),
         )
     }

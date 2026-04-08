@@ -9,13 +9,14 @@ fn main() {
 mod firmware {
     use std::time::Instant;
 
-    use anyhow::Result;
+    use anyhow::{Context, Result};
     use ble_node::{
-        ImuSource, MockImuSource, SensorId, advertisement_bytes, sensor_id_from_mac_be,
+        HardwareImuSource, ImuSensorConfig, ImuSource, MockImuSource, RequestedImu, SensorId,
+        advertisement_bytes, sensor_id_from_mac_be,
     };
-    use esp_idf_svc::hal::delay::FreeRtos;
+    use esp_idf_svc::hal::{delay::FreeRtos, peripherals::Peripherals};
     use esp32_nimble::{BLEDevice, enums::ConnMode};
-    use log::info;
+    use log::{info, warn};
 
     pub fn run() -> Result<()> {
         esp_idf_svc::sys::link_patches();
@@ -23,7 +24,8 @@ mod firmware {
 
         let ble_device = BLEDevice::take();
         let sensor_id = resolve_sensor_id(ble_device)?;
-        let mut imu = MockImuSource::new(sensor_id);
+        let config = ImuSensorConfig::from_compile_env().map_err(anyhow::Error::msg)?;
+        let mut imu = create_imu_source(sensor_id, config)?;
         let boot = Instant::now();
 
         let advertising = ble_device.get_advertising();
@@ -41,7 +43,14 @@ mod firmware {
         let mut seq = 0u16;
         loop {
             let elapsed_ms = boot.elapsed().as_millis().min(u32::MAX as u128) as u32;
-            let sample = imu.next_sample(sensor_id, seq, elapsed_ms);
+            let sample = match imu.next_sample(sensor_id, seq, elapsed_ms) {
+                Ok(sample) => sample,
+                Err(err) => {
+                    warn!("failed to read IMU sample: {err:#}");
+                    FreeRtos::delay_ms(20);
+                    continue;
+                }
+            };
 
             if seq % 5 == 0 {
                 let payload = advertisement_bytes(sample);
@@ -71,6 +80,29 @@ mod firmware {
         }
     }
 
+    fn create_imu_source(sensor_id: SensorId, config: ImuSensorConfig) -> Result<SensorImuSource> {
+        match config.requested {
+            RequestedImu::Mock => {
+                info!("using mock IMU source");
+                Ok(SensorImuSource::Mock(MockImuSource::new(sensor_id)))
+            }
+            _ => {
+                let peripherals =
+                    Peripherals::take().context("failed to acquire ESP peripherals for IMU")?;
+                let imu = HardwareImuSource::new(peripherals, config)?;
+                info!(
+                    "using {} on I2C addr=0x{:02X} sda={} scl={} hz={}",
+                    imu.detected().label(),
+                    config.bus.address,
+                    config.bus.sda_pin,
+                    config.bus.scl_pin,
+                    config.bus.baudrate_hz
+                );
+                Ok(SensorImuSource::Hardware(imu))
+            }
+        }
+    }
+
     fn resolve_sensor_id(ble_device: &BLEDevice) -> Result<SensorId> {
         if let Some(explicit) =
             option_env!("BLE_SENSOR_ID").and_then(|value| value.parse::<u8>().ok())
@@ -80,6 +112,25 @@ mod firmware {
 
         let address = ble_device.get_addr()?;
         Ok(sensor_id_from_mac_be(address.as_be_bytes()))
+    }
+
+    enum SensorImuSource {
+        Mock(MockImuSource),
+        Hardware(HardwareImuSource),
+    }
+
+    impl SensorImuSource {
+        fn next_sample(
+            &mut self,
+            sensor_id: SensorId,
+            seq: u16,
+            timestamp_ms: u32,
+        ) -> Result<ble_node::ImuSample> {
+            match self {
+                Self::Mock(imu) => Ok(imu.next_sample(sensor_id, seq, timestamp_ms)),
+                Self::Hardware(imu) => imu.next_sample(sensor_id, seq, timestamp_ms),
+            }
+        }
     }
 }
 

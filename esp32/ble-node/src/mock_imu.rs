@@ -1,8 +1,7 @@
-use crate::protocol::{ImuSample, SensorId};
-
-pub trait ImuSource {
-    fn next_sample(&mut self, sensor_id: SensorId, seq: u16, timestamp_ms: u32) -> ImuSample;
-}
+use crate::{
+    imu::ImuSource,
+    protocol::{ImuSample, SensorId},
+};
 
 #[derive(Debug, Clone)]
 pub struct MockImuSource {
