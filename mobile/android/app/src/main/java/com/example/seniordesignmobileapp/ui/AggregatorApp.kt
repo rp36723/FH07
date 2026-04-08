@@ -84,6 +84,8 @@ fun AggregatorApp(
                 permissionLauncher.launch(REQUIRED_BLE_PERMISSIONS)
             },
             onReconnect = viewModel::reconnect,
+            onStartRecording = viewModel::startRecording,
+            onStopRecording = viewModel::stopRecording,
             modifier = Modifier.padding(innerPadding),
         )
     }

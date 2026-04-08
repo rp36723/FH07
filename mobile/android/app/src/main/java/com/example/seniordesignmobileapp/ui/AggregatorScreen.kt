@@ -40,6 +40,8 @@ fun AggregatorScreen(
     permissionsGranted: Boolean,
     onGrantPermissions: () -> Unit,
     onReconnect: () -> Unit,
+    onStartRecording: () -> Unit,
+    onStopRecording: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val elapsedRealtimeMs by rememberElapsedRealtime()
@@ -76,6 +78,13 @@ fun AggregatorScreen(
                 Text("Rescan")
             }
         }
+
+        RecordingCard(
+            uiState = uiState,
+            elapsedRealtimeMs = elapsedRealtimeMs,
+            onStartRecording = onStartRecording,
+            onStopRecording = onStopRecording,
+        )
 
         if (!permissionsGranted) {
             Text(
@@ -122,6 +131,54 @@ fun AggregatorScreen(
                 uiState.recentEvents.takeLast(6).forEach { event ->
                     Text(event, style = MaterialTheme.typography.bodySmall)
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecordingCard(
+    uiState: AggregatorUiState,
+    elapsedRealtimeMs: Long,
+    onStartRecording: () -> Unit,
+    onStopRecording: () -> Unit,
+) {
+    DetailCard(title = "Session Recording") {
+        StatRow("State", if (uiState.isRecording) "Recording" else "Idle")
+        StatRow("Session file", uiState.recordingSessionName ?: "None")
+        if (uiState.isRecording) {
+            StatRow(
+                "Duration",
+                formatRecordingDuration(uiState.recordingStartedAtElapsedMs, elapsedRealtimeMs),
+            )
+        }
+        StatRow("Samples saved", uiState.recordedSampleCount.toString())
+        StatRow("Status snapshots", uiState.recordedStatusCount.toString())
+        uiState.recordingSessionPath?.let { path ->
+            Text("Stored in: $path", style = MaterialTheme.typography.bodySmall)
+        }
+        uiState.recordingErrorMessage?.let { message ->
+            Text(
+                text = message,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Button(
+                onClick = onStartRecording,
+                enabled = !uiState.isRecording,
+            ) {
+                Text("Start recording")
+            }
+            Button(
+                onClick = onStopRecording,
+                enabled = uiState.isRecording,
+            ) {
+                Text("Stop recording")
             }
         }
     }
@@ -373,6 +430,16 @@ private fun formatSensorAge(sensorAgeMs: Long): String {
     return "${formatShortElapsed(sensorAgeMs)} old"
 }
 
+private fun formatRecordingDuration(
+    startedAtElapsedMs: Long?,
+    elapsedRealtimeMs: Long,
+): String {
+    if (startedAtElapsedMs == null) {
+        return "Not recording"
+    }
+    return formatUptime((elapsedRealtimeMs - startedAtElapsedMs).coerceAtLeast(0))
+}
+
 private fun formatShortElapsed(durationMs: Long): String =
     when {
         durationMs < 1_000 -> "${durationMs} ms ago"
@@ -461,6 +528,8 @@ private fun AggregatorScreenPreview() {
             permissionsGranted = true,
             onGrantPermissions = {},
             onReconnect = {},
+            onStartRecording = {},
+            onStopRecording = {},
         )
     }
 }
@@ -476,6 +545,8 @@ private fun PermissionsPreview() {
             permissionsGranted = false,
             onGrantPermissions = {},
             onReconnect = {},
+            onStartRecording = {},
+            onStopRecording = {},
         )
     }
 }
