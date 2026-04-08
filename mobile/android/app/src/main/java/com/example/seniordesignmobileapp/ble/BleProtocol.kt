@@ -1,5 +1,8 @@
-package com.example.seniordesignmobileapp
+package com.example.seniordesignmobileapp.ble
 
+import com.example.seniordesignmobileapp.model.ActiveSensorStatus
+import com.example.seniordesignmobileapp.model.ImuSample
+import com.example.seniordesignmobileapp.model.NetworkStatus
 import java.util.Locale
 import java.util.UUID
 
@@ -13,32 +16,6 @@ val NETWORK_STATUS_UUID: UUID = UUID.fromString("12345678-1234-5678-1234-56789ab
 
 private const val NETWORK_STATUS_HEADER_LEN = 6
 private const val NETWORK_STATUS_ENTRY_LEN = 5
-
-data class ImuSample(
-    val version: Int,
-    val sensorId: Int,
-    val seq: Int,
-    val timestampMs: Long,
-    val ax: Int,
-    val ay: Int,
-    val az: Int,
-    val gx: Int,
-    val gy: Int,
-    val gz: Int,
-)
-
-data class ActiveSensorStatus(
-    val sensorId: Int,
-    val seq: Int,
-    val ageMs: Int,
-)
-
-data class NetworkStatus(
-    val version: Int,
-    val uptimeMs: Long,
-    val activeSensorCount: Int,
-    val sensors: List<ActiveSensorStatus>,
-)
 
 fun decodeImuSample(payload: ByteArray): ImuSample? {
     if (payload.size != SAMPLE_PAYLOAD_LEN) {

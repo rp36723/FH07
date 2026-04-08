@@ -1,4 +1,4 @@
-package com.example.seniordesignmobileapp
+package com.example.seniordesignmobileapp.ble
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -19,6 +19,8 @@ import android.content.pm.PackageManager
 import android.os.ParcelUuid
 import android.util.Log
 import androidx.core.content.ContextCompat
+import com.example.seniordesignmobileapp.model.AggregatorUiState
+import com.example.seniordesignmobileapp.model.BleConnectionPhase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -48,38 +50,6 @@ private const val TIMEOUT_RECONNECT_DELAY_MS = 3_000L
 private const val CONNECTION_TIMEOUT_MS = 12_000L
 private const val MAX_EVENT_LOG_ENTRIES = 10
 private const val TAG = "BleAggregator"
-
-enum class BleConnectionPhase(val label: String) {
-    IDLE("Idle"),
-    WAITING_FOR_PERMISSIONS("Waiting for permissions"),
-    BLUETOOTH_UNAVAILABLE("Bluetooth unavailable"),
-    BLUETOOTH_DISABLED("Bluetooth disabled"),
-    SCANNING("Scanning"),
-    CONNECTING("Connecting"),
-    REQUESTING_MTU("Requesting MTU"),
-    DISCOVERING_SERVICES("Discovering services"),
-    SUBSCRIBING("Subscribing"),
-    READING_STATUS("Reading status"),
-    STREAMING("Streaming"),
-    RECOVERING("Recovering"),
-    DISCONNECTED("Disconnected"),
-}
-
-data class AggregatorUiState(
-    val connectionState: String = "Waiting for Bluetooth permissions",
-    val connectionPhase: BleConnectionPhase = BleConnectionPhase.WAITING_FOR_PERMISSIONS,
-    val deviceName: String = AGGREGATOR_DEVICE_NAME,
-    val isScanning: Boolean = false,
-    val isConnected: Boolean = false,
-    val latestSample: ImuSample? = null,
-    val networkStatus: NetworkStatus? = null,
-    val lastSampleHex: String? = null,
-    val lastStatusHex: String? = null,
-    val errorMessage: String? = null,
-    val lastFailureReason: String? = null,
-    val reconnectCount: Int = 0,
-    val recentEvents: List<String> = emptyList(),
-)
 
 class BleAggregatorController(
     context: Context,
@@ -558,6 +528,7 @@ class BleAggregatorController(
                         gatt.discoverServices()
                     }
                 }
+
                 BluetoothProfile.STATE_DISCONNECTED -> handleDisconnect(
                     message = "Disconnected from ${_uiState.value.deviceName}",
                     restartScan = true,

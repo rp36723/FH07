@@ -18,11 +18,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.seniordesignmobileapp.ActiveSensorStatus
-import com.example.seniordesignmobileapp.AggregatorUiState
-import com.example.seniordesignmobileapp.BleConnectionPhase
-import com.example.seniordesignmobileapp.ImuSample
-import com.example.seniordesignmobileapp.NetworkStatus
+import com.example.seniordesignmobileapp.model.ActiveSensorStatus
+import com.example.seniordesignmobileapp.model.AggregatorUiState
+import com.example.seniordesignmobileapp.model.BleConnectionPhase
+import com.example.seniordesignmobileapp.model.ImuSample
+import com.example.seniordesignmobileapp.model.NetworkStatus
 import com.example.seniordesignmobileapp.ui.theme.SeniorDesignMobileAppTheme
 
 @Composable

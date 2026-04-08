@@ -21,9 +21,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.example.seniordesignmobileapp.BleAggregatorController
-import com.example.seniordesignmobileapp.REQUIRED_BLE_PERMISSIONS
-import com.example.seniordesignmobileapp.hasRequiredBlePermissions
+import com.example.seniordesignmobileapp.ble.BleAggregatorController
+import com.example.seniordesignmobileapp.ble.REQUIRED_BLE_PERMISSIONS
+import com.example.seniordesignmobileapp.ble.hasRequiredBlePermissions
 
 @Composable
 fun AggregatorApp(
