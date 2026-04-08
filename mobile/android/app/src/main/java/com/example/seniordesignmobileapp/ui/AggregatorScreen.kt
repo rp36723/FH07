@@ -26,8 +26,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.seniordesignmobileapp.analysis.ActivityMode
+import com.example.seniordesignmobileapp.analysis.PostureState
+import com.example.seniordesignmobileapp.analysis.WindowSpec
 import com.example.seniordesignmobileapp.model.ActiveSensorStatus
 import com.example.seniordesignmobileapp.model.AggregatorUiState
+import com.example.seniordesignmobileapp.model.AnalysisUiState
 import com.example.seniordesignmobileapp.model.BleConnectionPhase
 import com.example.seniordesignmobileapp.model.ImuSample
 import com.example.seniordesignmobileapp.model.NetworkStatus
@@ -108,6 +112,11 @@ fun AggregatorScreen(
 
         OverviewCard(
             uiState = uiState,
+            elapsedRealtimeMs = elapsedRealtimeMs,
+        )
+
+        AnalysisCard(
+            analysis = uiState.analysis,
             elapsedRealtimeMs = elapsedRealtimeMs,
         )
 
@@ -225,7 +234,7 @@ private fun SavedSessionRow(
                 fontWeight = FontWeight.Medium,
             )
             Text(
-                text = "${formatFileSize(session.sizeBytes)} • ${formatTimestamp(session.modifiedAtEpochMs)}",
+                text = "${formatFileSize(session.sizeBytes)} - ${formatTimestamp(session.modifiedAtEpochMs)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -263,6 +272,74 @@ private fun OverviewCard(
             StatRow("Last sample sensor", sample.sensorId.toString())
             StatRow("Last sample seq", sample.seq.toString())
             StatRow("Sample timestamp", "${sample.timestampMs} ms")
+        }
+    }
+}
+
+@Composable
+private fun AnalysisCard(
+    analysis: AnalysisUiState,
+    elapsedRealtimeMs: Long,
+) {
+    DetailCard(title = "Analysis Preview") {
+        StatRow("Activity", formatActivityMode(analysis.activityMode))
+        StatRow("Window", formatWindowSpec(analysis.config.windowSpec))
+        StatRow("Lookback", formatLookback(analysis.config.historyLookbackMs))
+        StatRow("Updated", formatAge(analysis.lastUpdatedAtElapsedMs, elapsedRealtimeMs))
+        Text(analysis.statusMessage, style = MaterialTheme.typography.bodyMedium)
+
+        if (analysis.expectedSensors.isNotEmpty()) {
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            StatRow("Expected sensors", formatSensorSet(analysis.expectedSensors))
+            StatRow(
+                "Available sensors",
+                formatSensorSet(analysis.windowSummary?.availableSensors.orEmpty()),
+            )
+            StatRow(
+                "Missing sensors",
+                formatSensorSet(analysis.windowSummary?.missingSensors.orEmpty()),
+            )
+            if (analysis.expectedSensorsInferred) {
+                Text(
+                    text = "Expected sensors are currently inferred from observed sensor IDs.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
+        analysis.windowSummary?.let { summary ->
+            if (summary.sampleCountsBySensor.isNotEmpty()) {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                Text(
+                    text = "Window sample counts",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                summary.sampleCountsBySensor.toSortedMap().forEach { (sensorId, count) ->
+                    StatRow("Sensor $sensorId", "$count samples")
+                }
+            }
+        }
+
+        analysis.latestResult?.let { result ->
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            StatRow("State", formatPostureState(result.postureState))
+            StatRow("Score", String.format(Locale.US, "%.1f / 100", result.score))
+            StatRow("Confidence", String.format(Locale.US, "%.2f", result.confidence))
+            if (result.alerts.isNotEmpty()) {
+                Text(
+                    text = "Alerts",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                result.alerts.forEach { alert ->
+                    Text(
+                        text = "- ${alert.message}",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
         }
     }
 }
@@ -493,6 +570,34 @@ private fun formatRecordingDuration(
     }
     return formatUptime((elapsedRealtimeMs - startedAtElapsedMs).coerceAtLeast(0))
 }
+
+private fun formatActivityMode(activityMode: ActivityMode): String =
+    activityMode.name.lowercase()
+        .replaceFirstChar { char -> char.titlecase(Locale.US) }
+
+private fun formatPostureState(postureState: PostureState): String =
+    postureState.name.lowercase()
+        .replaceFirstChar { char -> char.titlecase(Locale.US) }
+
+private fun formatWindowSpec(windowSpec: WindowSpec): String =
+    when (windowSpec) {
+        is WindowSpec.FixedDuration -> formatUptime(windowSpec.durationMs)
+        is WindowSpec.DurationRange -> "${formatUptime(windowSpec.minDurationMs)} - ${formatUptime(windowSpec.maxDurationMs)}"
+    }
+
+private fun formatLookback(lookbackMs: Long): String =
+    if (lookbackMs == 0L) {
+        "Live"
+    } else {
+        formatUptime(lookbackMs)
+    }
+
+private fun formatSensorSet(sensorIds: Set<Int>): String =
+    if (sensorIds.isEmpty()) {
+        "None"
+    } else {
+        sensorIds.sorted().joinToString()
+    }
 
 private fun formatShortElapsed(durationMs: Long): String =
     when {

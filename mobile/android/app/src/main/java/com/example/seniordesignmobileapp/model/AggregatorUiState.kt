@@ -36,6 +36,7 @@ data class AggregatorUiState(
     val recordedStatusCount: Int = 0,
     val savedSessions: List<SavedSessionSummary> = emptyList(),
     val recordingErrorMessage: String? = null,
+    val analysis: AnalysisUiState = AnalysisUiState(),
     val errorMessage: String? = null,
     val lastFailureReason: String? = null,
     val reconnectCount: Int = 0,

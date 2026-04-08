@@ -79,6 +79,15 @@ data class AnalysisInputWindow(
     val missingSensors: Set<Int>,
 )
 
+data class AnalysisWindowSummary(
+    val windowStartEpochMs: Long,
+    val windowEndEpochMs: Long,
+    val lookbackMs: Long,
+    val sampleCountsBySensor: Map<Int, Int>,
+    val availableSensors: Set<Int>,
+    val missingSensors: Set<Int>,
+)
+
 enum class PostureState {
     GOOD,
     WARNING,

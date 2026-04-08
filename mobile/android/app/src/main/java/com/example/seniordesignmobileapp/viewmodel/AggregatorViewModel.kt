@@ -8,7 +8,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.seniordesignmobileapp.ble.BleAggregatorController
+import com.example.seniordesignmobileapp.domain.PostureAnalysisCoordinator
 import com.example.seniordesignmobileapp.model.AggregatorUiState
+import com.example.seniordesignmobileapp.model.AnalysisUiState
 import com.example.seniordesignmobileapp.model.SavedSessionSummary
 import com.example.seniordesignmobileapp.recording.SessionRecorder
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,13 +28,18 @@ class AggregatorViewModel(
     private val controller = BleAggregatorController(applicationContext)
     private val sessionRecorder = SessionRecorder(applicationContext)
     private val recordingState = MutableStateFlow(RecordingState())
+    private val analysisCoordinator = PostureAnalysisCoordinator()
+    private val analysisState = MutableStateFlow(AnalysisUiState())
     private var lastRecordedSampleReceivedAtElapsedMs: Long? = null
     private var lastRecordedStatusReceivedAtElapsedMs: Long? = null
+    private var lastAnalyzedSampleReceivedAtElapsedMs: Long? = null
+    private var lastAnalyzedStatusReceivedAtElapsedMs: Long? = null
 
     val uiState: StateFlow<AggregatorUiState> = combine(
         controller.uiState,
         recordingState,
-    ) { bleState, recording ->
+        analysisState,
+    ) { bleState, recording, analysis ->
         bleState.copy(
             isRecording = recording.isRecording,
             recordingSessionName = recording.sessionName,
@@ -42,6 +49,7 @@ class AggregatorViewModel(
             recordedStatusCount = recording.recordedStatusCount,
             savedSessions = recording.savedSessions,
             recordingErrorMessage = recording.errorMessage,
+            analysis = analysis,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -56,6 +64,7 @@ class AggregatorViewModel(
         viewModelScope.launch {
             controller.uiState.collect { bleState ->
                 recordIfNeeded(bleState)
+                analyzeIfNeeded(bleState)
             }
         }
     }
@@ -64,11 +73,13 @@ class AggregatorViewModel(
         if (granted) {
             controller.start()
         } else {
+            resetAnalysis()
             controller.stop()
         }
     }
 
     fun reconnect() {
+        resetAnalysis()
         controller.restart()
     }
 
@@ -133,6 +144,7 @@ class AggregatorViewModel(
                 sessionRecorder.stopSession(reason = "viewmodel_cleared")
             }
         }
+        resetAnalysis()
         controller.stop()
         super.onCleared()
     }
@@ -198,10 +210,45 @@ class AggregatorViewModel(
         recordIfNeeded(bleState)
     }
 
+    private fun analyzeIfNeeded(bleState: AggregatorUiState) {
+        val statusTimestamp = bleState.lastStatusReceivedAtElapsedMs
+        if (bleState.networkStatus != null &&
+            statusTimestamp != null &&
+            statusTimestamp != lastAnalyzedStatusReceivedAtElapsedMs
+        ) {
+            val snapshot = analysisCoordinator.onNetworkStatus(
+                receivedAtEpochMs = System.currentTimeMillis(),
+                status = bleState.networkStatus,
+            )
+            lastAnalyzedStatusReceivedAtElapsedMs = statusTimestamp
+            analysisState.value = snapshot.toUiState(updatedAtElapsedMs = statusTimestamp)
+        }
+
+        val sampleTimestamp = bleState.lastSampleReceivedAtElapsedMs
+        if (bleState.latestSample != null &&
+            sampleTimestamp != null &&
+            sampleTimestamp != lastAnalyzedSampleReceivedAtElapsedMs
+        ) {
+            val snapshot = analysisCoordinator.onSample(
+                receivedAtEpochMs = System.currentTimeMillis(),
+                sample = bleState.latestSample,
+            )
+            lastAnalyzedSampleReceivedAtElapsedMs = sampleTimestamp
+            analysisState.value = snapshot.toUiState(updatedAtElapsedMs = sampleTimestamp)
+        }
+    }
+
     private suspend fun refreshSavedSessions() {
         recordingState.update {
             it.copy(savedSessions = sessionRecorder.listSessions())
         }
+    }
+
+    private fun resetAnalysis() {
+        analysisCoordinator.clear()
+        analysisState.value = AnalysisUiState()
+        lastAnalyzedSampleReceivedAtElapsedMs = null
+        lastAnalyzedStatusReceivedAtElapsedMs = null
     }
 }
 
@@ -215,3 +262,16 @@ private data class RecordingState(
     val savedSessions: List<SavedSessionSummary> = emptyList(),
     val errorMessage: String? = null,
 )
+
+private fun com.example.seniordesignmobileapp.domain.PostureAnalysisSnapshot.toUiState(
+    updatedAtElapsedMs: Long,
+): AnalysisUiState =
+    AnalysisUiState(
+        config = config,
+        expectedSensors = expectedSensors,
+        expectedSensorsInferred = expectedSensorsInferred,
+        windowSummary = windowSummary,
+        latestResult = latestResult,
+        lastUpdatedAtElapsedMs = updatedAtElapsedMs,
+        statusMessage = statusMessage,
+    )
