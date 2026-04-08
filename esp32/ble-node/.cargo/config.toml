@@ -1,15 +1,21 @@
-[target.xtensa-esp32s3-none-elf]
-runner = "probe-rs run --chip=esp32s3 --preverify --always-print-stacktrace --no-location --catch-hardfault"
-
 [env]
+MCU = "esp32s3"
+EMBUILD_PYTHON = "C:\\ncs\\toolchains\\c1a76fddb2\\opt\\bin\\python.exe"
+ESP_IDF_SDKCONFIG_DEFAULTS = { value = "sdkconfig.defaults", relative = true }
+PATH = { value = "C:\\ncs\\toolchains\\c1a76fddb2\\opt\\bin;C:\\Program Files\\Git\\cmd;C:\\Users\\noah\\.cargo\\bin;C:\\Users\\noah\\.rustup\\toolchains\\esp\\xtensa-esp32-elf-clang\\esp-clang\\bin;C:\\Users\\noah\\.rustup\\toolchains\\esp\\xtensa-esp-elf\\bin;C:\\Windows\\system32;C:\\Windows;C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\", force = true }
+
+[target.xtensa-esp32s3-espidf]
+linker = "ldproxy"
+runner = "espflash flash --monitor --chip esp32s3"
 
 [build]
-rustflags = [
-  "-C", "link-arg=-nostartfiles",
-  "-Z", "stack-protector=all",
-]
-
-target = "xtensa-esp32s3-none-elf"
+target = "xtensa-esp32s3-espidf"
+target-dir = "C:\\t"
 
 [unstable]
-build-std = ["alloc", "core"]
+build-std = ["std", "panic_abort"]
+
+[alias]
+test-host = "test --lib --target x86_64-pc-windows-msvc"
+check-sensor = "check --bin sensor --target xtensa-esp32s3-espidf"
+check-aggregator = "check --bin aggregator --target xtensa-esp32s3-espidf"

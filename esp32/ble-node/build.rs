@@ -1,9 +1,13 @@
 fn main() {
-    linker_be_nice();
-    // make sure linkall.x is the last linker script (otherwise might cause problems with flip-link)
-    println!("cargo:rustc-link-arg=-Tlinkall.x");
+    println!("cargo:rerun-if-changed=sdkconfig.defaults");
+
+    let target = std::env::var("TARGET").unwrap_or_default();
+    if target.contains("espidf") {
+        embuild::espidf::sysenv::output();
+    }
 }
 
+#[allow(dead_code)]
 fn linker_be_nice() {
     let args: Vec<String> = std::env::args().collect();
     if args.len() > 1 {

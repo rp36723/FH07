@@ -1,78 +1,43 @@
 [package]
-edition      = "2024"
-name         = "ble-node"
+edition = "2024"
+name = "ble-node"
 rust-version = "1.88"
-version      = "0.1.0"
+version = "0.1.0"
+build = "build.rs"
+default-run = "aggregator"
+autobins = false
 
 [[bin]]
-name = "ble-node"
-path = "./src/bin/main.rs"
+name = "sensor"
+path = "src/bin/sensor.rs"
+test = false
 
-[dependencies]
-esp-hal = { version = "~1.0", features = ["esp32s3", "unstable"] }
+[[bin]]
+name = "aggregator"
+path = "src/bin/aggregator.rs"
+test = false
 
-esp-rtos = { version = "0.2.0", features = [
-  "embassy",
-  "esp-alloc",
-  "esp-radio",
-  "esp32s3",
-] }
+[target.'cfg(target_os = "espidf")'.dependencies]
+anyhow = "1.0.100"
+esp-idf-svc = "0.52.1"
+esp32-nimble = "0.12.0"
+log = "0.4.28"
+uuid = "1.18.1"
 
-esp-bootloader-esp-idf = { version = "0.4.0", features = ["esp32s3"] }
+[build-dependencies]
+embuild = { version = "0.33.1", features = ["espidf"] }
 
-embassy-net = { version = "0.7.1", features = [
-  "dhcpv4",
-  "medium-ethernet",
-  "tcp",
-  "udp",
-] }
-embedded-io = "0.7.1"
-embedded-io-async = "0.7.0"
-esp-alloc = "0.9.0"
-rtt-target = "0.6.2"
-# for more networking protocol support see https://crates.io/crates/edge-net
-bleps = { git = "https://github.com/bjoernQ/bleps", package = "bleps", rev = "a5148d8ae679e021b78f53fd33afb8bb35d0b62e", features = [
-  "async",
-  "macros",
-] }
-embassy-executor = { version = "0.9.1", features = [] }
-embassy-time = "0.5.0"
-esp-radio = { version = "0.17.0", features = [
-  "ble",
-  "coex",
-  "esp-alloc",
-  "esp32s3",
-  "smoltcp",
-  "unstable",
-  "wifi",
-] }
-smoltcp = { version = "0.12.0", default-features = false, features = [
-  "medium-ethernet",
-  "multicast",
-  "proto-dhcpv4",
-  "proto-dns",
-  "proto-ipv4",
-  "socket-dns",
-  "socket-icmp",
-  "socket-raw",
-  "socket-tcp",
-  "socket-udp",
-] }
-
-critical-section = "1.2.0"
-static_cell      = "2.1.1"
-
+[patch.crates-io]
+embuild = { path = "vendor/embuild" }
 
 [profile.dev]
-# Rust debug is too slow.
-# For debug builds always builds with some optimization
 opt-level = "s"
 
 [profile.release]
-codegen-units    = 1     # LLVM can perform better optimizations using a single thread
-debug            = 2
+codegen-units = 1
+debug = 2
 debug-assertions = false
-incremental      = false
-lto              = 'fat'
-opt-level        = 's'
-overflow-checks  = false
+incremental = false
+lto = "fat"
+opt-level = "s"
+overflow-checks = false
