@@ -1,0 +1,95 @@
+package com.example.seniordesignmobileapp.ui
+
+import android.content.Context
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.example.seniordesignmobileapp.BleAggregatorController
+import com.example.seniordesignmobileapp.REQUIRED_BLE_PERMISSIONS
+import com.example.seniordesignmobileapp.hasRequiredBlePermissions
+
+@Composable
+fun AggregatorApp(
+    applicationContext: Context,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val controller = remember { BleAggregatorController(applicationContext) }
+    val uiState by controller.uiState.collectAsState()
+    var permissionsGranted by remember {
+        mutableStateOf(hasRequiredBlePermissions(context))
+    }
+    var requestedPermissions by rememberSaveable { mutableStateOf(false) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+    ) {
+        permissionsGranted = hasRequiredBlePermissions(context)
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                permissionsGranted = hasRequiredBlePermissions(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { controller.stop() }
+    }
+
+    LaunchedEffect(permissionsGranted) {
+        if (permissionsGranted) {
+            controller.start()
+        } else {
+            controller.stop()
+        }
+    }
+
+    LaunchedEffect(permissionsGranted, requestedPermissions) {
+        if (!permissionsGranted && !requestedPermissions) {
+            requestedPermissions = true
+            permissionLauncher.launch(REQUIRED_BLE_PERMISSIONS)
+        }
+    }
+
+    Scaffold(
+        modifier = modifier
+            .fillMaxSize()
+            .statusBarsPadding(),
+    ) { innerPadding ->
+        AggregatorScreen(
+            uiState = uiState,
+            permissionsGranted = permissionsGranted,
+            onGrantPermissions = {
+                requestedPermissions = true
+                permissionLauncher.launch(REQUIRED_BLE_PERMISSIONS)
+            },
+            onReconnect = { controller.restart() },
+            modifier = Modifier.padding(innerPadding),
+        )
+    }
+}
