@@ -21,9 +21,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.example.seniordesignmobileapp.ble.BleAggregatorController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.seniordesignmobileapp.ble.REQUIRED_BLE_PERMISSIONS
 import com.example.seniordesignmobileapp.ble.hasRequiredBlePermissions
+import com.example.seniordesignmobileapp.viewmodel.AggregatorViewModel
 
 @Composable
 fun AggregatorApp(
@@ -32,8 +33,10 @@ fun AggregatorApp(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val controller = remember { BleAggregatorController(applicationContext) }
-    val uiState by controller.uiState.collectAsState()
+    val viewModel: AggregatorViewModel = viewModel(
+        factory = AggregatorViewModel.factory(applicationContext),
+    )
+    val uiState by viewModel.uiState.collectAsState()
     var permissionsGranted by remember {
         mutableStateOf(hasRequiredBlePermissions(context))
     }
@@ -57,16 +60,8 @@ fun AggregatorApp(
         }
     }
 
-    DisposableEffect(Unit) {
-        onDispose { controller.stop() }
-    }
-
     LaunchedEffect(permissionsGranted) {
-        if (permissionsGranted) {
-            controller.start()
-        } else {
-            controller.stop()
-        }
+        viewModel.onBlePermissionsChanged(permissionsGranted)
     }
 
     LaunchedEffect(permissionsGranted, requestedPermissions) {
@@ -88,7 +83,7 @@ fun AggregatorApp(
                 requestedPermissions = true
                 permissionLauncher.launch(REQUIRED_BLE_PERMISSIONS)
             },
-            onReconnect = { controller.restart() },
+            onReconnect = viewModel::reconnect,
             modifier = Modifier.padding(innerPadding),
         )
     }
