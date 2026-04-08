@@ -41,6 +41,15 @@ impl RequestedImu {
     pub fn supported_values() -> &'static str {
         "mock, auto, mpu6050, mpu6500, mpu9250, mpu9255, mpu65x0"
     }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Mock => "mock",
+            Self::Auto => "auto",
+            Self::Mpu6050 => "MPU-6050",
+            Self::Mpu65x0 => "MPU-65x0 family",
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -128,12 +137,13 @@ impl ImuSensorConfig {
         address: Option<&str>,
         baudrate_hz: Option<&str>,
     ) -> Result<Self, String> {
+        let defaults = Self::default();
         let requested = requested
             .map(parse_requested_imu)
             .transpose()?
-            .unwrap_or(RequestedImu::Mock);
+            .unwrap_or(defaults.requested);
 
-        let mut bus = ImuBusConfig::default();
+        let mut bus = defaults.bus;
         if let Some(sda_pin) = sda_pin {
             bus.sda_pin = parse_u8("BLE_IMU_SDA", sda_pin)?;
         }

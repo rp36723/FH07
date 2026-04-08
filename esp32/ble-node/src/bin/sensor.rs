@@ -83,7 +83,10 @@ mod firmware {
     fn create_imu_source(sensor_id: SensorId, config: ImuSensorConfig) -> Result<SensorImuSource> {
         match config.requested {
             RequestedImu::Mock => {
-                info!("using mock IMU source");
+                info!(
+                    "configured IMU={} using mock IMU source",
+                    config.requested.label()
+                );
                 Ok(SensorImuSource::Mock(MockImuSource::new(sensor_id)))
             }
             _ => {
@@ -91,7 +94,8 @@ mod firmware {
                     Peripherals::take().context("failed to acquire ESP peripherals for IMU")?;
                 let imu = HardwareImuSource::new(peripherals, config)?;
                 info!(
-                    "using {} on I2C addr=0x{:02X} sda={} scl={} hz={}",
+                    "configured IMU={} detected IMU={} on I2C addr=0x{:02X} sda={} scl={} hz={}",
+                    config.requested.label(),
                     imu.detected().label(),
                     config.bus.address,
                     config.bus.sda_pin,
