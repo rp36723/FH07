@@ -47,6 +47,23 @@ class BleProtocolTest {
     }
 
     @Test
+    fun decodeImuSample_rejectsWrongLength() {
+        val tooShortPayload = bytes(
+            0x01, 0x07, 0x2A, 0x00, 0x39, 0x05, 0x00, 0x00,
+            0x01, 0x00, 0xFE, 0xFF, 0x03, 0x00, 0xFC, 0xFF,
+            0x05, 0x00, 0xFA,
+        )
+        val tooLongPayload = bytes(
+            0x01, 0x07, 0x2A, 0x00, 0x39, 0x05, 0x00, 0x00,
+            0x01, 0x00, 0xFE, 0xFF, 0x03, 0x00, 0xFC, 0xFF,
+            0x05, 0x00, 0xFA, 0xFF, 0x00,
+        )
+
+        assertNull(decodeImuSample(tooShortPayload))
+        assertNull(decodeImuSample(tooLongPayload))
+    }
+
+    @Test
     fun decodeNetworkStatus_returnsExpectedValues() {
         val payload = bytes(
             0x01, 0xF4, 0x01, 0x00, 0x00, 0x02,
@@ -71,6 +88,25 @@ class BleProtocolTest {
     }
 
     @Test
+    fun decodeNetworkStatus_acceptsZeroSensors() {
+        val payload = bytes(
+            0x01, 0x39, 0x30, 0x00, 0x00, 0x00,
+        )
+
+        val decoded = decodeNetworkStatus(payload)
+
+        assertEquals(
+            NetworkStatus(
+                version = 1,
+                uptimeMs = 12_345,
+                activeSensorCount = 0,
+                sensors = emptyList(),
+            ),
+            decoded,
+        )
+    }
+
+    @Test
     fun decodeNetworkStatus_rejectsTruncatedPayload() {
         val payload = bytes(
             0x01, 0xF4, 0x01, 0x00, 0x00, 0x02,
@@ -78,6 +114,37 @@ class BleProtocolTest {
         )
 
         assertNull(decodeNetworkStatus(payload))
+    }
+
+    @Test
+    fun decodeNetworkStatus_rejectsWrongVersion() {
+        val payload = bytes(
+            0x02, 0xF4, 0x01, 0x00, 0x00, 0x00,
+        )
+
+        assertNull(decodeNetworkStatus(payload))
+    }
+
+    @Test
+    fun decodeNetworkStatus_rejectsMismatchedEntryCount() {
+        val tooFewEntries = bytes(
+            0x01, 0xF4, 0x01, 0x00, 0x00, 0x01,
+        )
+        val extraTrailingBytes = bytes(
+            0x01, 0xF4, 0x01, 0x00, 0x00, 0x01,
+            0x01, 0x04, 0x00, 0xF4, 0x01,
+            0xFF,
+        )
+
+        assertNull(decodeNetworkStatus(tooFewEntries))
+        assertNull(decodeNetworkStatus(extraTrailingBytes))
+    }
+
+    @Test
+    fun toHexString_formatsBytesAsUppercaseHex() {
+        val payload = bytes(0x00, 0x0A, 0x8F, 0xFF)
+
+        assertEquals("00 0A 8F FF", payload.toHexString())
     }
 
     private fun bytes(vararg values: Int): ByteArray =
