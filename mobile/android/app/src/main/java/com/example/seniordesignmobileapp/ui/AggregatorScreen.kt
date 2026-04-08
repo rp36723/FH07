@@ -1,11 +1,14 @@
 package com.example.seniordesignmobileapp.ui
 
+import android.os.SystemClock
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -15,7 +18,12 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.seniordesignmobileapp.model.ActiveSensorStatus
@@ -24,6 +32,7 @@ import com.example.seniordesignmobileapp.model.BleConnectionPhase
 import com.example.seniordesignmobileapp.model.ImuSample
 import com.example.seniordesignmobileapp.model.NetworkStatus
 import com.example.seniordesignmobileapp.ui.theme.SeniorDesignMobileAppTheme
+import kotlinx.coroutines.delay
 
 @Composable
 fun AggregatorScreen(
@@ -33,6 +42,8 @@ fun AggregatorScreen(
     onReconnect: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val elapsedRealtimeMs by rememberElapsedRealtime()
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -48,22 +59,6 @@ fun AggregatorScreen(
             text = uiState.connectionState,
             style = MaterialTheme.typography.bodyLarge,
         )
-
-        DetailCard(title = "Diagnostics") {
-            Text("Phase: ${uiState.connectionPhase.label}")
-            Text("Reconnect attempts: ${uiState.reconnectCount}")
-            Text("Connected: ${if (uiState.isConnected) "yes" else "no"}")
-            uiState.lastFailureReason?.let { reason ->
-                Text("Last failure: $reason")
-            }
-
-            if (uiState.recentEvents.isNotEmpty()) {
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                uiState.recentEvents.takeLast(6).forEach { event ->
-                    Text(event, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -96,46 +91,303 @@ fun AggregatorScreen(
             )
         }
 
-        DetailCard(title = "Network Status") {
-            val status = uiState.networkStatus
-            if (status == null) {
-                Text("Waiting for network_status...")
-            } else {
-                Text("Protocol v${status.version}")
-                Text("Uptime: ${formatDuration(status.uptimeMs)}")
-                Text("Active sensors: ${status.activeSensorCount}")
+        OverviewCard(
+            uiState = uiState,
+            elapsedRealtimeMs = elapsedRealtimeMs,
+        )
 
-                if (status.sensors.isNotEmpty()) {
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                    status.sensors.forEach { sensor ->
-                        Text("Sensor ${sensor.sensorId}: seq ${sensor.seq}, age ${sensor.ageMs} ms")
-                    }
+        SensorTableCard(
+            networkStatus = uiState.networkStatus,
+            elapsedRealtimeMs = elapsedRealtimeMs,
+            rawHex = uiState.lastStatusHex,
+        )
+
+        LatestSampleCard(
+            sample = uiState.latestSample,
+            receivedAtElapsedMs = uiState.lastSampleReceivedAtElapsedMs,
+            rawHex = uiState.lastSampleHex,
+            elapsedRealtimeMs = elapsedRealtimeMs,
+        )
+
+        DetailCard(title = "Diagnostics") {
+            Text("Phase: ${uiState.connectionPhase.label}")
+            Text("Reconnect attempts: ${uiState.reconnectCount}")
+            Text("Connected: ${if (uiState.isConnected) "yes" else "no"}")
+            uiState.lastFailureReason?.let { reason ->
+                Text("Last failure: $reason")
+            }
+
+            if (uiState.recentEvents.isNotEmpty()) {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                uiState.recentEvents.takeLast(6).forEach { event ->
+                    Text(event, style = MaterialTheme.typography.bodySmall)
                 }
             }
+        }
+    }
+}
 
-            uiState.lastStatusHex?.let { hex ->
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                Text("Raw: $hex", style = MaterialTheme.typography.bodySmall)
+@Composable
+private fun OverviewCard(
+    uiState: AggregatorUiState,
+    elapsedRealtimeMs: Long,
+) {
+    val status = uiState.networkStatus
+    val sample = uiState.latestSample
+
+    DetailCard(title = "Overview") {
+        StatRow("Device", uiState.deviceName)
+        StatRow("Phase", uiState.connectionPhase.label)
+        StatRow("Status update", formatAge(uiState.lastStatusReceivedAtElapsedMs, elapsedRealtimeMs))
+        StatRow("Sample update", formatAge(uiState.lastSampleReceivedAtElapsedMs, elapsedRealtimeMs))
+
+        if (status != null) {
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            StatRow("Aggregator uptime", formatUptime(status.uptimeMs))
+            StatRow("Active sensors", status.activeSensorCount.toString())
+        }
+
+        if (sample != null) {
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            StatRow("Last sample sensor", sample.sensorId.toString())
+            StatRow("Last sample seq", sample.seq.toString())
+            StatRow("Sample timestamp", "${sample.timestampMs} ms")
+        }
+    }
+}
+
+@Composable
+private fun SensorTableCard(
+    networkStatus: NetworkStatus?,
+    elapsedRealtimeMs: Long,
+    rawHex: String?,
+) {
+    DetailCard(title = "Sensors") {
+        if (networkStatus == null) {
+            Text("Waiting for network_status...")
+            return@DetailCard
+        }
+
+        if (networkStatus.sensors.isEmpty()) {
+            Text("No active sensors reported.")
+        } else {
+            TableHeader()
+            HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
+            networkStatus.sensors.forEach { sensor ->
+                SensorRow(
+                    sensor = sensor,
+                )
+                HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
             }
         }
 
-        DetailCard(title = "Latest Sample") {
-            val sample = uiState.latestSample
-            if (sample == null) {
-                Text("Waiting for sample_stream notifications...")
-            } else {
-                Text("Sensor ${sample.sensorId}")
-                Text("Seq: ${sample.seq}")
-                Text("Timestamp: ${sample.timestampMs} ms")
-                Text("Accel: [${sample.ax}, ${sample.ay}, ${sample.az}]")
-                Text("Gyro: [${sample.gx}, ${sample.gy}, ${sample.gz}]")
-            }
-
-            uiState.lastSampleHex?.let { hex ->
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                Text("Raw: $hex", style = MaterialTheme.typography.bodySmall)
-            }
+        rawHex?.let { hex ->
+            Text("Raw: $hex", style = MaterialTheme.typography.bodySmall)
         }
+    }
+}
+
+@Composable
+private fun LatestSampleCard(
+    sample: ImuSample?,
+    receivedAtElapsedMs: Long?,
+    rawHex: String?,
+    elapsedRealtimeMs: Long,
+) {
+    DetailCard(title = "Latest Sample") {
+        if (sample == null) {
+            Text("Waiting for sample_stream notifications...")
+            return@DetailCard
+        }
+
+        StatRow("Sensor", sample.sensorId.toString())
+        StatRow("Sequence", sample.seq.toString())
+        StatRow("Timestamp", "${sample.timestampMs} ms")
+        StatRow("Updated", formatAge(receivedAtElapsedMs, elapsedRealtimeMs))
+
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        AxisGroup(
+            title = "Accel",
+            x = sample.ax,
+            y = sample.ay,
+            z = sample.az,
+        )
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        AxisGroup(
+            title = "Gyro",
+            x = sample.gx,
+            y = sample.gy,
+            z = sample.gz,
+        )
+
+        rawHex?.let { hex ->
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Text("Raw: $hex", style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+@Composable
+private fun TableHeader() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        TableCell("ID", weight = 0.16f, bold = true)
+        TableCell("Seq", weight = 0.22f, bold = true)
+        TableCell("Sensor age", weight = 0.32f, bold = true)
+        TableCell("State", weight = 0.30f, bold = true)
+    }
+}
+
+@Composable
+private fun SensorRow(
+    sensor: ActiveSensorStatus,
+) {
+    val state = when {
+        sensor.ageMs <= 250 -> "Fresh"
+        sensor.ageMs <= 1_000 -> "Aging"
+        else -> "Stale?"
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        TableCell(sensor.sensorId.toString(), weight = 0.16f)
+        TableCell(sensor.seq.toString(), weight = 0.22f)
+        TableCell("${sensor.ageMs} ms", weight = 0.32f)
+        TableCell(state, weight = 0.30f)
+    }
+
+    Text(
+        text = "Observed ${formatSensorAge(sensor.ageMs.toLong())}",
+        style = MaterialTheme.typography.bodySmall,
+    )
+}
+
+@Composable
+private fun RowScope.TableCell(
+    text: String,
+    weight: Float,
+    bold: Boolean = false,
+) {
+    Text(
+        text = text,
+        modifier = Modifier
+            .weight(weight)
+            .widthIn(min = 0.dp),
+        fontWeight = if (bold) FontWeight.SemiBold else FontWeight.Normal,
+        textAlign = TextAlign.Start,
+    )
+}
+
+@Composable
+private fun StatRow(
+    label: String,
+    value: String,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.weight(0.42f),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = value,
+            modifier = Modifier.weight(0.58f),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+        )
+    }
+}
+
+@Composable
+private fun AxisGroup(
+    title: String,
+    x: Int,
+    y: Int,
+    z: Int,
+) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.SemiBold,
+    )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        AxisValue("X", x)
+        AxisValue("Y", y)
+        AxisValue("Z", z)
+    }
+}
+
+@Composable
+private fun RowScope.AxisValue(
+    axis: String,
+    value: Int,
+) {
+    Column(
+        modifier = Modifier.weight(1f),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        Text(
+            text = axis,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = value.toString(),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Medium,
+        )
+    }
+}
+
+@Composable
+private fun rememberElapsedRealtime(): State<Long> =
+    produceState(initialValue = SystemClock.elapsedRealtime()) {
+        while (true) {
+            delay(1_000)
+            value = SystemClock.elapsedRealtime()
+        }
+    }
+
+private fun formatAge(
+    receivedAtElapsedMs: Long?,
+    elapsedRealtimeMs: Long,
+): String {
+    if (receivedAtElapsedMs == null) {
+        return "Waiting"
+    }
+    return formatShortElapsed((elapsedRealtimeMs - receivedAtElapsedMs).coerceAtLeast(0))
+}
+
+private fun formatSensorAge(sensorAgeMs: Long): String {
+    return "${formatShortElapsed(sensorAgeMs)} old"
+}
+
+private fun formatShortElapsed(durationMs: Long): String =
+    when {
+        durationMs < 1_000 -> "${durationMs} ms ago"
+        durationMs < 60_000 -> String.format("%.1f s ago", durationMs / 1_000f)
+        else -> formatUptime(durationMs)
+    }
+
+private fun formatUptime(durationMs: Long): String {
+    val totalSeconds = durationMs / 1_000
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return if (minutes == 0L) {
+        "${seconds}s"
+    } else {
+        "${minutes}m ${seconds}s"
     }
 }
 
@@ -159,13 +411,6 @@ private fun DetailCard(
             content()
         }
     }
-}
-
-private fun formatDuration(durationMs: Long): String {
-    val totalSeconds = durationMs / 1_000
-    val minutes = totalSeconds / 60
-    val seconds = totalSeconds % 60
-    return "${minutes}m ${seconds}s"
 }
 
 @Preview(showBackground = true)
@@ -210,6 +455,8 @@ private fun AggregatorScreenPreview() {
                 ),
                 lastSampleHex = "01 07 2A 00 39 05 00 00 0A 00 EC FF 1E 00 D8 FF 32 00 C4 FF",
                 lastStatusHex = "01 39 30 00 00 02 01 78 00 4B 00 07 2A 00 12 00",
+                lastSampleReceivedAtElapsedMs = SystemClock.elapsedRealtime() - 420,
+                lastStatusReceivedAtElapsedMs = SystemClock.elapsedRealtime() - 950,
             ),
             permissionsGranted = true,
             onGrantPermissions = {},

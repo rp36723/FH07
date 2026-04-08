@@ -26,6 +26,8 @@ data class AggregatorUiState(
     val networkStatus: NetworkStatus? = null,
     val lastSampleHex: String? = null,
     val lastStatusHex: String? = null,
+    val lastSampleReceivedAtElapsedMs: Long? = null,
+    val lastStatusReceivedAtElapsedMs: Long? = null,
     val errorMessage: String? = null,
     val lastFailureReason: String? = null,
     val reconnectCount: Int = 0,

@@ -17,6 +17,7 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.ParcelUuid
+import android.os.SystemClock
 import android.util.Log
 import androidx.core.content.ContextCompat
 import com.example.seniordesignmobileapp.model.AggregatorUiState
@@ -619,6 +620,7 @@ class BleAggregatorController(
             }
 
             val decoded = decodeNetworkStatus(value)
+            val receivedAt = SystemClock.elapsedRealtime()
             _uiState.update {
                 it.copy(
                     connectionPhase = if (it.isConnected) {
@@ -628,6 +630,7 @@ class BleAggregatorController(
                     },
                     networkStatus = decoded ?: it.networkStatus,
                     lastStatusHex = value.toHexString(),
+                    lastStatusReceivedAtElapsedMs = receivedAt,
                     errorMessage = if (decoded == null) {
                         "Failed to decode network_status (${value.size} bytes)."
                     } else {
@@ -659,11 +662,13 @@ class BleAggregatorController(
             }
 
             val decoded = decodeImuSample(value)
+            val receivedAt = SystemClock.elapsedRealtime()
             _uiState.update {
                 it.copy(
                     connectionPhase = BleConnectionPhase.STREAMING,
                     latestSample = decoded ?: it.latestSample,
                     lastSampleHex = value.toHexString(),
+                    lastSampleReceivedAtElapsedMs = receivedAt,
                     errorMessage = if (decoded == null) {
                         "Failed to decode sample_stream packet (${value.size} bytes)."
                     } else {
