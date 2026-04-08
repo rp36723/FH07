@@ -76,7 +76,7 @@ fun AggregatorApp(
             .fillMaxSize()
             .statusBarsPadding(),
     ) { innerPadding ->
-        AggregatorScreen(
+        AggregatorShell(
             uiState = uiState,
             permissionsGranted = permissionsGranted,
             onGrantPermissions = {
