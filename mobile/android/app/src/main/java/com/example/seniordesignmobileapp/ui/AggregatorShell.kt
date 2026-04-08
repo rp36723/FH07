@@ -43,6 +43,8 @@ fun AggregatorShell(
     onGrantPermissions: () -> Unit,
     onReconnect: () -> Unit,
     onCalibrateSitting: () -> Unit,
+    onSetUpperBackSensor: (Int?) -> Unit,
+    onSetLowerBackSensor: (Int?) -> Unit,
     onStartRecording: () -> Unit,
     onStopRecording: () -> Unit,
     onShareSession: (SavedSessionSummary) -> Unit,
@@ -88,6 +90,8 @@ fun AggregatorShell(
                     onGrantPermissions = onGrantPermissions,
                     onReconnect = onReconnect,
                     onCalibrateSitting = onCalibrateSitting,
+                    onSetUpperBackSensor = onSetUpperBackSensor,
+                    onSetLowerBackSensor = onSetLowerBackSensor,
                     modifier = Modifier.fillMaxSize(),
                 )
 

@@ -216,6 +216,95 @@ class PostureAnalysisCoordinatorTest {
         )
     }
 
+    @Test
+    fun manualSensorSelection_overridesAutoInference() {
+        val coordinator = PostureAnalysisCoordinator()
+
+        coordinator.onNetworkStatus(
+            receivedAtEpochMs = 1_000L,
+            status = networkStatus(sensorIds = listOf(3, 7, 9)),
+        )
+
+        val lowerSnapshot = coordinator.setLowerBackSensor(
+            sensorId = 9,
+            nowEpochMs = 1_100L,
+        )
+        val finalSnapshot = coordinator.setUpperBackSensor(
+            sensorId = 3,
+            nowEpochMs = 1_200L,
+        )
+
+        assertEquals(listOf(3, 7, 9), lowerSnapshot.availableSensorIds)
+        assertEquals(9, finalSnapshot.manualLowerBackSensorId)
+        assertEquals(3, finalSnapshot.manualUpperBackSensorId)
+        assertEquals(
+            listOf(
+                SensorAssignment(sensorId = 9, placement = SensorPlacement.LOWER_BACK),
+                SensorAssignment(sensorId = 3, placement = SensorPlacement.UPPER_BACK),
+            ),
+            finalSnapshot.sensorAssignments,
+        )
+    }
+
+    @Test
+    fun changingSensorSelection_clearsCalibration() {
+        val coordinator = PostureAnalysisCoordinator()
+
+        coordinator.onNetworkStatus(
+            receivedAtEpochMs = 1_000L,
+            status = networkStatus(sensorIds = listOf(3, 7)),
+        )
+        coordinator.onSample(
+            receivedAtEpochMs = 1_100L,
+            sample = sample(sensorId = 3, seq = 1, ax = 0, ay = 0, az = 1000),
+        )
+        coordinator.onSample(
+            receivedAtEpochMs = 1_100L,
+            sample = sample(sensorId = 7, seq = 1, ax = 0, ay = 0, az = 1000),
+        )
+        val calibration = coordinator.captureCalibration(nowEpochMs = 1_200L)
+
+        assertTrue(calibration.success)
+
+        val updatedSnapshot = coordinator.setUpperBackSensor(
+            sensorId = 3,
+            nowEpochMs = 1_300L,
+        )
+
+        assertNull(updatedSnapshot.sittingCalibration)
+        assertEquals(
+            "Upper back sensor selection updated. Recalibrate sitting posture.",
+            updatedSnapshot.calibrationMessage,
+        )
+    }
+
+    @Test
+    fun manualSensorSelection_doesNotAssignSameSensorToBothBackRoles() {
+        val coordinator = PostureAnalysisCoordinator()
+
+        coordinator.onNetworkStatus(
+            receivedAtEpochMs = 1_000L,
+            status = networkStatus(sensorIds = listOf(3, 7)),
+        )
+        coordinator.setLowerBackSensor(
+            sensorId = 3,
+            nowEpochMs = 1_100L,
+        )
+
+        val snapshot = coordinator.setUpperBackSensor(
+            sensorId = 3,
+            nowEpochMs = 1_200L,
+        )
+
+        assertEquals(
+            listOf(
+                SensorAssignment(sensorId = 3, placement = SensorPlacement.LOWER_BACK),
+                SensorAssignment(sensorId = 7, placement = SensorPlacement.UPPER_BACK),
+            ),
+            snapshot.sensorAssignments,
+        )
+    }
+
     private fun sample(
         sensorId: Int,
         seq: Int,

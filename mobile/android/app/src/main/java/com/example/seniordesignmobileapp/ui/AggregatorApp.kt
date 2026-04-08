@@ -85,6 +85,8 @@ fun AggregatorApp(
             },
             onReconnect = viewModel::reconnect,
             onCalibrateSitting = viewModel::calibrateSittingPosture,
+            onSetUpperBackSensor = viewModel::setUpperBackSensor,
+            onSetLowerBackSensor = viewModel::setLowerBackSensor,
             onStartRecording = viewModel::startRecording,
             onStopRecording = viewModel::stopRecording,
             onShareSession = { session -> shareSavedSession(context, session) },

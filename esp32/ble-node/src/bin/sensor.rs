@@ -76,7 +76,7 @@ mod firmware {
             }
 
             seq = seq.wrapping_add(1);
-            FreeRtos::delay_ms(20);
+            FreeRtos::delay_ms(1);
         }
     }
 

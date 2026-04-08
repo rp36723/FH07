@@ -94,6 +94,34 @@ class AggregatorViewModel(
         )
     }
 
+    fun setUpperBackSensor(
+        sensorId: Int?,
+    ) {
+        val elapsedRealtimeMs = SystemClock.elapsedRealtime()
+        val snapshot = analysisCoordinator.setUpperBackSensor(
+            sensorId = sensorId,
+            nowEpochMs = System.currentTimeMillis(),
+        )
+        analysisState.value = snapshot.toUiState(
+            updatedAtElapsedMs = elapsedRealtimeMs,
+            calibrationMessage = snapshot.calibrationMessage,
+        )
+    }
+
+    fun setLowerBackSensor(
+        sensorId: Int?,
+    ) {
+        val elapsedRealtimeMs = SystemClock.elapsedRealtime()
+        val snapshot = analysisCoordinator.setLowerBackSensor(
+            sensorId = sensorId,
+            nowEpochMs = System.currentTimeMillis(),
+        )
+        analysisState.value = snapshot.toUiState(
+            updatedAtElapsedMs = elapsedRealtimeMs,
+            calibrationMessage = snapshot.calibrationMessage,
+        )
+    }
+
     fun startRecording() {
         if (recordingState.value.isRecording) {
             return
@@ -287,6 +315,9 @@ private fun com.example.seniordesignmobileapp.domain.PostureAnalysisSnapshot.toU
     AnalysisUiState(
         config = config,
         sensorAssignments = sensorAssignments,
+        availableSensorIds = availableSensorIds,
+        manualUpperBackSensorId = manualUpperBackSensorId,
+        manualLowerBackSensorId = manualLowerBackSensorId,
         expectedSensors = expectedSensors,
         expectedSensorsInferred = expectedSensorsInferred,
         sittingCalibration = sittingCalibration,

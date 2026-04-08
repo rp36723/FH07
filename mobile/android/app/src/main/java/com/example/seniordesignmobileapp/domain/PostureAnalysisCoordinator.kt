@@ -25,6 +25,8 @@ class PostureAnalysisCoordinator(
     private var latestNetworkStatus: NetworkStatus? = null
     private var sittingCalibration: SittingCalibration? = null
     private var calibrationMessage: String? = null
+    private var manualUpperBackSensorId: Int? = null
+    private var manualLowerBackSensorId: Int? = null
 
     fun onSample(
         receivedAtEpochMs: Long,
@@ -91,12 +93,36 @@ class PostureAnalysisCoordinator(
         )
     }
 
+    fun setUpperBackSensor(
+        sensorId: Int?,
+        nowEpochMs: Long,
+    ): PostureAnalysisSnapshot {
+        if (manualUpperBackSensorId != sensorId) {
+            manualUpperBackSensorId = sensorId
+            clearCalibration("Upper back sensor selection updated. Recalibrate sitting posture.")
+        }
+        return buildSnapshot(nowEpochMs)
+    }
+
+    fun setLowerBackSensor(
+        sensorId: Int?,
+        nowEpochMs: Long,
+    ): PostureAnalysisSnapshot {
+        if (manualLowerBackSensorId != sensorId) {
+            manualLowerBackSensorId = sensorId
+            clearCalibration("Lower back sensor selection updated. Recalibrate sitting posture.")
+        }
+        return buildSnapshot(nowEpochMs)
+    }
+
     fun clear() {
         bufferedSamplesBySensor.clear()
         observedSensorIds.clear()
         latestNetworkStatus = null
         sittingCalibration = null
         calibrationMessage = null
+        manualUpperBackSensorId = null
+        manualLowerBackSensorId = null
     }
 
     fun currentSnapshot(
@@ -143,6 +169,9 @@ class PostureAnalysisCoordinator(
             return PostureAnalysisSnapshot(
                 config = effectiveConfig,
                 sensorAssignments = sensorAssignments,
+                availableSensorIds = resolveAvailableSensorIds(),
+                manualUpperBackSensorId = manualUpperBackSensorId,
+                manualLowerBackSensorId = manualLowerBackSensorId,
                 expectedSensors = expectedSensors,
                 expectedSensorsInferred = config.expectedSensors.isEmpty(),
                 sittingCalibration = sittingCalibration,
@@ -195,6 +224,9 @@ class PostureAnalysisCoordinator(
         return PostureAnalysisSnapshot(
             config = effectiveConfig,
             sensorAssignments = sensorAssignments,
+            availableSensorIds = resolveAvailableSensorIds(),
+            manualUpperBackSensorId = manualUpperBackSensorId,
+            manualLowerBackSensorId = manualLowerBackSensorId,
             expectedSensors = expectedSensors,
             expectedSensorsInferred = config.expectedSensors.isEmpty(),
             sittingCalibration = sittingCalibration,
@@ -210,7 +242,37 @@ class PostureAnalysisCoordinator(
             return config.expectedSensors
         }
 
-        val inferredSensorIds = when {
+        val availableSensorIds = resolveAvailableSensorIds().toMutableList()
+        val assignments = mutableListOf<SensorAssignment>()
+
+        val lowerBackSensorId = resolveSensorForPlacement(
+            preferredSensorId = manualLowerBackSensorId,
+            availableSensorIds = availableSensorIds,
+        )
+        if (lowerBackSensorId != null) {
+            assignments += SensorAssignment(
+                sensorId = lowerBackSensorId,
+                placement = SensorPlacement.LOWER_BACK,
+            )
+            availableSensorIds.remove(lowerBackSensorId)
+        }
+
+        val upperBackSensorId = resolveSensorForPlacement(
+            preferredSensorId = manualUpperBackSensorId,
+            availableSensorIds = availableSensorIds,
+        )
+        if (upperBackSensorId != null) {
+            assignments += SensorAssignment(
+                sensorId = upperBackSensorId,
+                placement = SensorPlacement.UPPER_BACK,
+            )
+        }
+
+        return assignments
+    }
+
+    private fun resolveAvailableSensorIds(): List<Int> {
+        val liveSensorIds = when {
             latestNetworkStatus?.sensors?.isNotEmpty() == true -> latestNetworkStatus!!.sensors
                 .map { it.sensorId }
                 .sorted()
@@ -219,24 +281,26 @@ class PostureAnalysisCoordinator(
             else -> emptyList()
         }
 
-        return buildList {
-            inferredSensorIds.getOrNull(0)?.let { sensorId ->
-                add(
-                    SensorAssignment(
-                        sensorId = sensorId,
-                        placement = SensorPlacement.LOWER_BACK,
-                    )
-                )
-            }
-            inferredSensorIds.getOrNull(1)?.let { sensorId ->
-                add(
-                    SensorAssignment(
-                        sensorId = sensorId,
-                        placement = SensorPlacement.UPPER_BACK,
-                    )
-                )
-            }
+        return (liveSensorIds + listOfNotNull(manualLowerBackSensorId, manualUpperBackSensorId))
+            .distinct()
+            .sorted()
+    }
+
+    private fun resolveSensorForPlacement(
+        preferredSensorId: Int?,
+        availableSensorIds: List<Int>,
+    ): Int? {
+        if (preferredSensorId != null && preferredSensorId in availableSensorIds) {
+            return preferredSensorId
         }
+        return availableSensorIds.firstOrNull()
+    }
+
+    private fun clearCalibration(
+        message: String,
+    ) {
+        sittingCalibration = null
+        calibrationMessage = message
     }
 
     private fun pruneExpiredSamples(nowEpochMs: Long) {
@@ -276,6 +340,9 @@ data class CalibrationCaptureResult(
 data class PostureAnalysisSnapshot(
     val config: AnalysisConfig,
     val sensorAssignments: List<SensorAssignment>,
+    val availableSensorIds: List<Int>,
+    val manualUpperBackSensorId: Int?,
+    val manualLowerBackSensorId: Int?,
     val expectedSensors: Set<Int>,
     val expectedSensorsInferred: Boolean,
     val sittingCalibration: SittingCalibration?,

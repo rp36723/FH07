@@ -3,7 +3,7 @@ use std::vec::Vec;
 use crate::protocol::{ImuSample, PROTOCOL_VERSION, SensorId};
 
 pub const MAX_SENSORS: usize = 8;
-pub const STALE_TIMEOUT_MS: u32 = 3_000;
+pub const STALE_TIMEOUT_MS: u32 = 1_000;
 pub const NETWORK_STATUS_HEADER_LEN: usize = 6;
 pub const NETWORK_STATUS_ENTRY_LEN: usize = 5;
 

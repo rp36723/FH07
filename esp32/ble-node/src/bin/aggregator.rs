@@ -78,7 +78,7 @@ mod firmware {
             let mut table = SensorTable::new();
 
             loop {
-                match sample_rx.recv_timeout(Duration::from_millis(250)) {
+                match sample_rx.recv_timeout(Duration::from_millis(20)) {
                     Ok(sample) => {
                         let now_ms = elapsed_ms(started_at);
                         table.ingest(sample, now_ms);
@@ -133,7 +133,7 @@ mod firmware {
         block_on(async move {
             loop {
                 let tx = sample_tx.clone();
-                scan.start(ble_device, 1_000, move |_device, data| {
+                scan.start(ble_device, 500, move |_device, data| {
                     if let Some(manufacturer) = data.manufacture_data()
                         && let Some(sample) = decode_manufacturer_data(
                             manufacturer.company_identifier,

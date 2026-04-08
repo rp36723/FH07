@@ -10,6 +10,9 @@ import com.example.seniordesignmobileapp.analysis.SittingCalibration
 data class AnalysisUiState(
     val config: AnalysisConfig = AnalysisConfig.sittingDefault(),
     val sensorAssignments: List<SensorAssignment> = emptyList(),
+    val availableSensorIds: List<Int> = emptyList(),
+    val manualUpperBackSensorId: Int? = null,
+    val manualLowerBackSensorId: Int? = null,
     val expectedSensors: Set<Int> = emptySet(),
     val expectedSensorsInferred: Boolean = true,
     val sittingCalibration: SittingCalibration? = null,
