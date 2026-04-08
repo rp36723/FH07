@@ -34,9 +34,17 @@ data class AggregatorUiState(
     val recordingStartedAtElapsedMs: Long? = null,
     val recordedSampleCount: Int = 0,
     val recordedStatusCount: Int = 0,
+    val savedSessions: List<SavedSessionSummary> = emptyList(),
     val recordingErrorMessage: String? = null,
     val errorMessage: String? = null,
     val lastFailureReason: String? = null,
     val reconnectCount: Int = 0,
     val recentEvents: List<String> = emptyList(),
+)
+
+data class SavedSessionSummary(
+    val fileName: String,
+    val absolutePath: String,
+    val sizeBytes: Long,
+    val modifiedAtEpochMs: Long,
 )

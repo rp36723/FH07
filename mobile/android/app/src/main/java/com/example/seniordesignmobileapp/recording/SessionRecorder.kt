@@ -4,6 +4,7 @@ import android.content.Context
 import com.example.seniordesignmobileapp.model.ActiveSensorStatus
 import com.example.seniordesignmobileapp.model.ImuSample
 import com.example.seniordesignmobileapp.model.NetworkStatus
+import com.example.seniordesignmobileapp.model.SavedSessionSummary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -105,6 +106,29 @@ class SessionRecorder(
                 )
             }
         }
+
+    suspend fun listSessions(limit: Int = 10): List<SavedSessionSummary> =
+        withContext(Dispatchers.IO) {
+            sessionsDirectory
+                .listFiles()
+                .orEmpty()
+                .filter { file -> file.isFile && file.extension == "jsonl" }
+                .sortedByDescending(File::lastModified)
+                .take(limit)
+                .map { file ->
+                    SavedSessionSummary(
+                        fileName = file.name,
+                        absolutePath = file.absolutePath,
+                        sizeBytes = file.length(),
+                        modifiedAtEpochMs = file.lastModified(),
+                    )
+                }
+        }
+
+    fun getSessionFile(fileName: String): File? {
+        val candidate = File(sessionsDirectory, fileName)
+        return candidate.takeIf { it.exists() && it.isFile }
+    }
 
     private suspend fun appendEvent(event: JSONObject): Boolean =
         withContext(Dispatchers.IO) {

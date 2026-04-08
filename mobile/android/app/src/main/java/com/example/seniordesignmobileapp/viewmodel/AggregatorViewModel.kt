@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.seniordesignmobileapp.ble.BleAggregatorController
 import com.example.seniordesignmobileapp.model.AggregatorUiState
+import com.example.seniordesignmobileapp.model.SavedSessionSummary
 import com.example.seniordesignmobileapp.recording.SessionRecorder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -39,6 +40,7 @@ class AggregatorViewModel(
             recordingStartedAtElapsedMs = recording.startedAtElapsedMs,
             recordedSampleCount = recording.recordedSampleCount,
             recordedStatusCount = recording.recordedStatusCount,
+            savedSessions = recording.savedSessions,
             recordingErrorMessage = recording.errorMessage,
         )
     }.stateIn(
@@ -48,6 +50,9 @@ class AggregatorViewModel(
     )
 
     init {
+        viewModelScope.launch {
+            refreshSavedSessions()
+        }
         viewModelScope.launch {
             controller.uiState.collect { bleState ->
                 recordIfNeeded(bleState)
@@ -87,6 +92,7 @@ class AggregatorViewModel(
                 lastRecordedSampleReceivedAtElapsedMs = null
                 lastRecordedStatusReceivedAtElapsedMs = null
                 recordCurrentSnapshots(controller.uiState.value)
+                refreshSavedSessions()
             } catch (error: Exception) {
                 recordingState.update {
                     it.copy(errorMessage = error.message ?: "Failed to start recording.")
@@ -112,6 +118,7 @@ class AggregatorViewModel(
                 }
                 lastRecordedSampleReceivedAtElapsedMs = null
                 lastRecordedStatusReceivedAtElapsedMs = null
+                refreshSavedSessions()
             } catch (error: Exception) {
                 recordingState.update {
                     it.copy(errorMessage = error.message ?: "Failed to stop recording.")
@@ -190,6 +197,12 @@ class AggregatorViewModel(
     private suspend fun recordCurrentSnapshots(bleState: AggregatorUiState) {
         recordIfNeeded(bleState)
     }
+
+    private suspend fun refreshSavedSessions() {
+        recordingState.update {
+            it.copy(savedSessions = sessionRecorder.listSessions())
+        }
+    }
 }
 
 private data class RecordingState(
@@ -199,5 +212,6 @@ private data class RecordingState(
     val startedAtElapsedMs: Long? = null,
     val recordedSampleCount: Int = 0,
     val recordedStatusCount: Int = 0,
+    val savedSessions: List<SavedSessionSummary> = emptyList(),
     val errorMessage: String? = null,
 )

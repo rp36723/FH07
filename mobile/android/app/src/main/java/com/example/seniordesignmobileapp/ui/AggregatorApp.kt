@@ -86,6 +86,7 @@ fun AggregatorApp(
             onReconnect = viewModel::reconnect,
             onStartRecording = viewModel::startRecording,
             onStopRecording = viewModel::stopRecording,
+            onShareSession = { session -> shareSavedSession(context, session) },
             modifier = Modifier.padding(innerPadding),
         )
     }

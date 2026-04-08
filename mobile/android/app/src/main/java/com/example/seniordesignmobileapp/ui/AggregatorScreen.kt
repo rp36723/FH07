@@ -31,8 +31,12 @@ import com.example.seniordesignmobileapp.model.AggregatorUiState
 import com.example.seniordesignmobileapp.model.BleConnectionPhase
 import com.example.seniordesignmobileapp.model.ImuSample
 import com.example.seniordesignmobileapp.model.NetworkStatus
+import com.example.seniordesignmobileapp.model.SavedSessionSummary
 import com.example.seniordesignmobileapp.ui.theme.SeniorDesignMobileAppTheme
 import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun AggregatorScreen(
@@ -42,6 +46,7 @@ fun AggregatorScreen(
     onReconnect: () -> Unit,
     onStartRecording: () -> Unit,
     onStopRecording: () -> Unit,
+    onShareSession: (SavedSessionSummary) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val elapsedRealtimeMs by rememberElapsedRealtime()
@@ -84,6 +89,7 @@ fun AggregatorScreen(
             elapsedRealtimeMs = elapsedRealtimeMs,
             onStartRecording = onStartRecording,
             onStopRecording = onStopRecording,
+            onShareSession = onShareSession,
         )
 
         if (!permissionsGranted) {
@@ -142,6 +148,7 @@ private fun RecordingCard(
     elapsedRealtimeMs: Long,
     onStartRecording: () -> Unit,
     onStopRecording: () -> Unit,
+    onShareSession: (SavedSessionSummary) -> Unit,
 ) {
     DetailCard(title = "Session Recording") {
         StatRow("State", if (uiState.isRecording) "Recording" else "Idle")
@@ -180,6 +187,53 @@ private fun RecordingCard(
             ) {
                 Text("Stop recording")
             }
+        }
+
+        if (uiState.savedSessions.isNotEmpty()) {
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Text(
+                text = "Recent recordings",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+            )
+            uiState.savedSessions.take(5).forEach { session ->
+                SavedSessionRow(
+                    session = session,
+                    onShareSession = onShareSession,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SavedSessionRow(
+    session: SavedSessionSummary,
+    onShareSession: (SavedSessionSummary) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = session.fileName,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+            )
+            Text(
+                text = "${formatFileSize(session.sizeBytes)} • ${formatTimestamp(session.modifiedAtEpochMs)}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Button(
+            onClick = { onShareSession(session) },
+        ) {
+            Text("Share")
         }
     }
 }
@@ -530,6 +584,7 @@ private fun AggregatorScreenPreview() {
             onReconnect = {},
             onStartRecording = {},
             onStopRecording = {},
+            onShareSession = {},
         )
     }
 }
@@ -547,6 +602,17 @@ private fun PermissionsPreview() {
             onReconnect = {},
             onStartRecording = {},
             onStopRecording = {},
+            onShareSession = {},
         )
     }
 }
+
+private fun formatTimestamp(timestampEpochMs: Long): String =
+    SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date(timestampEpochMs))
+
+private fun formatFileSize(sizeBytes: Long): String =
+    when {
+        sizeBytes < 1024 -> "$sizeBytes B"
+        sizeBytes < 1024 * 1024 -> String.format(Locale.US, "%.1f KB", sizeBytes / 1024f)
+        else -> String.format(Locale.US, "%.1f MB", sizeBytes / (1024f * 1024f))
+    }
