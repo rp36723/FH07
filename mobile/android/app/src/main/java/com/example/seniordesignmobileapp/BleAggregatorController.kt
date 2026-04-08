@@ -535,9 +535,7 @@ class BleAggregatorController(
             }
 
             startConnectionWatchdog("Notification setup timed out")
-            requestNetworkStatusRead()
             enableSampleNotifications(gatt, sampleCharacteristic)
-            startStatusPolling()
         }
 
         override fun onCharacteristicRead(
@@ -622,7 +620,10 @@ class BleAggregatorController(
                 )
             }
 
-            if (status != BluetoothGatt.GATT_SUCCESS) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                requestNetworkStatusRead()
+                startStatusPolling()
+            } else {
                 recoverConnection("Retrying after subscription failure")
             }
         }
