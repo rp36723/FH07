@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.seniordesignmobileapp.analysis.ActivityMode
 import com.example.seniordesignmobileapp.analysis.PostureState
+import com.example.seniordesignmobileapp.analysis.SensorPlacement
 import com.example.seniordesignmobileapp.analysis.WindowSpec
 import com.example.seniordesignmobileapp.model.ActiveSensorStatus
 import com.example.seniordesignmobileapp.model.AggregatorUiState
@@ -48,6 +49,7 @@ fun AggregatorScreen(
     permissionsGranted: Boolean,
     onGrantPermissions: () -> Unit,
     onReconnect: () -> Unit,
+    onCalibrateSitting: () -> Unit,
     onStartRecording: () -> Unit,
     onStopRecording: () -> Unit,
     onShareSession: (SavedSessionSummary) -> Unit,
@@ -118,6 +120,7 @@ fun AggregatorScreen(
         AnalysisCard(
             analysis = uiState.analysis,
             elapsedRealtimeMs = elapsedRealtimeMs,
+            onCalibrateSitting = onCalibrateSitting,
         )
 
         SensorTableCard(
@@ -280,6 +283,7 @@ private fun OverviewCard(
 private fun AnalysisCard(
     analysis: AnalysisUiState,
     elapsedRealtimeMs: Long,
+    onCalibrateSitting: () -> Unit,
 ) {
     DetailCard(title = "Analysis Preview") {
         StatRow("Activity", formatActivityMode(analysis.activityMode))
@@ -287,6 +291,38 @@ private fun AnalysisCard(
         StatRow("Lookback", formatLookback(analysis.config.historyLookbackMs))
         StatRow("Updated", formatAge(analysis.lastUpdatedAtElapsedMs, elapsedRealtimeMs))
         Text(analysis.statusMessage, style = MaterialTheme.typography.bodyMedium)
+
+        analysis.calibrationMessage?.let { message ->
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        val upperAssignment = analysis.sensorAssignments
+            .firstOrNull { it.placement == SensorPlacement.UPPER_BACK }
+        val lowerAssignment = analysis.sensorAssignments
+            .firstOrNull { it.placement == SensorPlacement.LOWER_BACK }
+
+        if (upperAssignment != null || lowerAssignment != null) {
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            StatRow("Upper back sensor", upperAssignment?.sensorId?.toString() ?: "Waiting")
+            StatRow("Lower back sensor", lowerAssignment?.sensorId?.toString() ?: "Waiting")
+        }
+
+        analysis.sittingCalibration?.let { calibration ->
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            StatRow("Calibration", formatTimestamp(calibration.capturedAtEpochMs))
+            StatRow("Baseline bend", formatDegrees(calibration.bendAngleDeg))
+        }
+
+        Button(
+            onClick = onCalibrateSitting,
+            enabled = analysis.windowSummary?.availableSensors?.size ?: 0 >= 2,
+        ) {
+            Text(if (analysis.sittingCalibration == null) "Calibrate sitting" else "Recalibrate")
+        }
 
         if (analysis.expectedSensors.isNotEmpty()) {
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -327,6 +363,13 @@ private fun AnalysisCard(
             StatRow("State", formatPostureState(result.postureState))
             StatRow("Score", String.format(Locale.US, "%.1f / 100", result.score))
             StatRow("Confidence", String.format(Locale.US, "%.2f", result.confidence))
+            result.sittingDetails?.let { details ->
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                StatRow("Upper pitch", formatDegrees(details.upperBackPitchDeg))
+                StatRow("Lower pitch", formatDegrees(details.lowerBackPitchDeg))
+                StatRow("Current bend", formatDegrees(details.bendAngleDeg))
+                StatRow("Bend delta", formatDegrees(details.bendDeltaFromBaselineDeg))
+            }
             if (result.alerts.isNotEmpty()) {
                 Text(
                     text = "Alerts",
@@ -599,6 +642,13 @@ private fun formatSensorSet(sensorIds: Set<Int>): String =
         sensorIds.sorted().joinToString()
     }
 
+private fun formatDegrees(value: Float?): String =
+    if (value == null) {
+        "Waiting"
+    } else {
+        String.format(Locale.US, "%.1f deg", value)
+    }
+
 private fun formatShortElapsed(durationMs: Long): String =
     when {
         durationMs < 1_000 -> "${durationMs} ms ago"
@@ -687,6 +737,7 @@ private fun AggregatorScreenPreview() {
             permissionsGranted = true,
             onGrantPermissions = {},
             onReconnect = {},
+            onCalibrateSitting = {},
             onStartRecording = {},
             onStopRecording = {},
             onShareSession = {},
@@ -705,6 +756,7 @@ private fun PermissionsPreview() {
             permissionsGranted = false,
             onGrantPermissions = {},
             onReconnect = {},
+            onCalibrateSitting = {},
             onStartRecording = {},
             onStopRecording = {},
             onShareSession = {},

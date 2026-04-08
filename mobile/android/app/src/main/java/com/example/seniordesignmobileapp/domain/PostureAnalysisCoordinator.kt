@@ -3,23 +3,28 @@ package com.example.seniordesignmobileapp.domain
 import com.example.seniordesignmobileapp.analysis.AnalysisConfig
 import com.example.seniordesignmobileapp.analysis.AnalysisInputWindow
 import com.example.seniordesignmobileapp.analysis.AnalysisWindowSummary
-import com.example.seniordesignmobileapp.analysis.PlaceholderPostureAnalyzer
 import com.example.seniordesignmobileapp.analysis.PostureAlert
 import com.example.seniordesignmobileapp.analysis.PostureAlertCode
 import com.example.seniordesignmobileapp.analysis.PostureAnalysisResult
 import com.example.seniordesignmobileapp.analysis.PostureAnalyzer
-import com.example.seniordesignmobileapp.analysis.PostureState
+import com.example.seniordesignmobileapp.analysis.SensorAssignment
+import com.example.seniordesignmobileapp.analysis.SensorPlacement
+import com.example.seniordesignmobileapp.analysis.SittingCalibration
+import com.example.seniordesignmobileapp.analysis.SittingPostureAnalyzer
+import com.example.seniordesignmobileapp.analysis.SittingPostureMath
 import com.example.seniordesignmobileapp.analysis.WindowSpec
 import com.example.seniordesignmobileapp.model.ImuSample
 import com.example.seniordesignmobileapp.model.NetworkStatus
 
 class PostureAnalysisCoordinator(
     private val config: AnalysisConfig = AnalysisConfig.sittingDefault(),
-    private val analyzer: PostureAnalyzer = PlaceholderPostureAnalyzer(),
+    private val analyzer: PostureAnalyzer = SittingPostureAnalyzer(),
 ) {
     private val bufferedSamplesBySensor = mutableMapOf<Int, ArrayDeque<BufferedSample>>()
     private val observedSensorIds = linkedSetOf<Int>()
     private var latestNetworkStatus: NetworkStatus? = null
+    private var sittingCalibration: SittingCalibration? = null
+    private var calibrationMessage: String? = null
 
     fun onSample(
         receivedAtEpochMs: Long,
@@ -40,10 +45,58 @@ class PostureAnalysisCoordinator(
         return buildSnapshot(nowEpochMs = receivedAtEpochMs)
     }
 
+    fun captureCalibration(
+        nowEpochMs: Long,
+    ): CalibrationCaptureResult {
+        pruneExpiredSamples(nowEpochMs)
+        val sensorAssignments = resolveSensorAssignments()
+        val upperBackSensorId = sensorAssignments
+            .firstOrNull { it.placement == SensorPlacement.UPPER_BACK }
+            ?.sensorId
+        val lowerBackSensorId = sensorAssignments
+            .firstOrNull { it.placement == SensorPlacement.LOWER_BACK }
+            ?.sensorId
+        val upperBackMetrics = upperBackSensorId?.let { sensorId ->
+            SittingPostureMath.computeSensorMetrics(bufferedSamplesBySensor[sensorId].orEmpty().map { it.sample })
+        }
+        val lowerBackMetrics = lowerBackSensorId?.let { sensorId ->
+            SittingPostureMath.computeSensorMetrics(bufferedSamplesBySensor[sensorId].orEmpty().map { it.sample })
+        }
+
+        if (upperBackSensorId == null || lowerBackSensorId == null || upperBackMetrics == null || lowerBackMetrics == null) {
+            calibrationMessage = "Calibration needs both upper and lower back sensors with live samples."
+            return CalibrationCaptureResult(
+                success = false,
+                message = calibrationMessage!!,
+                snapshot = buildSnapshot(nowEpochMs),
+            )
+        }
+
+        sittingCalibration = SittingCalibration(
+            capturedAtEpochMs = nowEpochMs,
+            upperBackSensorId = upperBackSensorId,
+            lowerBackSensorId = lowerBackSensorId,
+            upperBackPitchDeg = upperBackMetrics.pitchDeg,
+            lowerBackPitchDeg = lowerBackMetrics.pitchDeg,
+            bendAngleDeg = SittingPostureMath.angleBetween(
+                upperBackMetrics.gravityVector,
+                lowerBackMetrics.gravityVector,
+            ),
+        )
+        calibrationMessage = "Captured upright sitting calibration using sensors $upperBackSensorId and $lowerBackSensorId."
+        return CalibrationCaptureResult(
+            success = true,
+            message = calibrationMessage!!,
+            snapshot = buildSnapshot(nowEpochMs),
+        )
+    }
+
     fun clear() {
         bufferedSamplesBySensor.clear()
         observedSensorIds.clear()
         latestNetworkStatus = null
+        sittingCalibration = null
+        calibrationMessage = null
     }
 
     fun currentSnapshot(
@@ -55,11 +108,13 @@ class PostureAnalysisCoordinator(
     ): PostureAnalysisSnapshot {
         pruneExpiredSamples(nowEpochMs)
 
-        val windowDurationMs = config.windowSpec.maxDurationMs()
-        val lookbackMs = config.historyLookbackMs
+        val sensorAssignments = resolveSensorAssignments()
+        val effectiveConfig = config.copy(expectedSensors = sensorAssignments)
+        val windowDurationMs = effectiveConfig.windowSpec.maxDurationMs()
+        val lookbackMs = effectiveConfig.historyLookbackMs
         val windowEndEpochMs = nowEpochMs - lookbackMs
         val windowStartEpochMs = windowEndEpochMs - windowDurationMs
-        val minWindowDurationMs = config.windowSpec.minDurationMs()
+        val minWindowDurationMs = effectiveConfig.windowSpec.minDurationMs()
 
         val timedSamplesBySensor = bufferedSamplesBySensor.mapValues { (_, samples) ->
             samples.filter { it.receivedAtEpochMs in windowStartEpochMs..windowEndEpochMs }
@@ -68,7 +123,10 @@ class PostureAnalysisCoordinator(
             samples.map { it.sample }
         }
 
-        val expectedSensors = resolveExpectedSensors()
+        val expectedSensors = sensorAssignments
+            .filter { it.required }
+            .map { it.sensorId }
+            .toSet()
         val availableSensors = samplesBySensor.keys
         val missingSensors = expectedSensors - availableSensors
 
@@ -83,11 +141,14 @@ class PostureAnalysisCoordinator(
 
         if (samplesBySensor.isEmpty()) {
             return PostureAnalysisSnapshot(
-                config = config,
+                config = effectiveConfig,
+                sensorAssignments = sensorAssignments,
                 expectedSensors = expectedSensors,
                 expectedSensorsInferred = config.expectedSensors.isEmpty(),
+                sittingCalibration = sittingCalibration,
                 windowSummary = windowSummary,
                 latestResult = null,
+                calibrationMessage = calibrationMessage,
                 statusMessage = "Waiting for enough live samples to build an analysis window.",
             )
         }
@@ -98,12 +159,14 @@ class PostureAnalysisCoordinator(
             lookbackMs = lookbackMs,
             samplesBySensor = samplesBySensor,
             networkStatus = latestNetworkStatus,
+            sensorAssignments = sensorAssignments,
             expectedSensors = expectedSensors,
             availableSensors = availableSensors,
             missingSensors = missingSensors,
+            sittingCalibration = sittingCalibration,
         )
 
-        val baseResult = analyzer.analyze(inputWindow, config)
+        val baseResult = analyzer.analyze(inputWindow, effectiveConfig)
         val coverageMs = computeCoverageMs(
             timedSamplesBySensor = timedSamplesBySensor,
             windowStartEpochMs = windowStartEpochMs,
@@ -122,31 +185,58 @@ class PostureAnalysisCoordinator(
         }.distinct()
         val result = baseResult.copy(alerts = augmentedAlerts)
         val statusMessage = when {
+            sensorAssignments.size < 2 -> "Waiting to identify two back sensors for sitting analysis."
             coverageMs < minWindowDurationMs -> "Collecting more sample history for the requested analysis window."
-            missingSensors.isNotEmpty() && config.allowPartialAnalysis -> "Running partial analysis while waiting for all expected sensors."
-            missingSensors.isNotEmpty() -> "Waiting for all expected sensors before full analysis."
-            else -> "Analysis window is ready for posture scoring."
+            sittingCalibration == null -> "Capture an upright sitting calibration to start scoring."
+            missingSensors.isNotEmpty() -> "Partial posture preview only; both back sensors are needed for a score."
+            else -> "Calibrated sitting analysis is active."
         }
 
         return PostureAnalysisSnapshot(
-            config = config,
+            config = effectiveConfig,
+            sensorAssignments = sensorAssignments,
             expectedSensors = expectedSensors,
             expectedSensorsInferred = config.expectedSensors.isEmpty(),
+            sittingCalibration = sittingCalibration,
             windowSummary = windowSummary,
-            latestResult = result.withPostureState(
-                warningThreshold = config.warningScoreThreshold,
-                poorThreshold = config.poorScoreThreshold,
-            ),
+            latestResult = result,
+            calibrationMessage = calibrationMessage,
             statusMessage = statusMessage,
         )
     }
 
-    private fun resolveExpectedSensors(): Set<Int> {
-        val configuredSensors = config.expectedSensors.map { it.sensorId }.toSet()
-        if (configuredSensors.isNotEmpty()) {
-            return configuredSensors
+    private fun resolveSensorAssignments(): List<SensorAssignment> {
+        if (config.expectedSensors.isNotEmpty()) {
+            return config.expectedSensors
         }
-        return observedSensorIds.toSet()
+
+        val inferredSensorIds = when {
+            latestNetworkStatus?.sensors?.isNotEmpty() == true -> latestNetworkStatus!!.sensors
+                .map { it.sensorId }
+                .sorted()
+
+            observedSensorIds.isNotEmpty() -> observedSensorIds.sorted()
+            else -> emptyList()
+        }
+
+        return buildList {
+            inferredSensorIds.getOrNull(0)?.let { sensorId ->
+                add(
+                    SensorAssignment(
+                        sensorId = sensorId,
+                        placement = SensorPlacement.LOWER_BACK,
+                    )
+                )
+            }
+            inferredSensorIds.getOrNull(1)?.let { sensorId ->
+                add(
+                    SensorAssignment(
+                        sensorId = sensorId,
+                        placement = SensorPlacement.UPPER_BACK,
+                    )
+                )
+            }
+        }
     }
 
     private fun pruneExpiredSamples(nowEpochMs: Long) {
@@ -169,8 +259,7 @@ class PostureAnalysisCoordinator(
         windowEndEpochMs: Long,
     ): Long {
         val sampleTimes = timedSamplesBySensor.values.flatten().map { it.receivedAtEpochMs }
-        val sampleCount = sampleTimes.size
-        if (sampleCount == 0) {
+        if (sampleTimes.isEmpty()) {
             return 0L
         }
         val earliestSampleEpochMs = sampleTimes.minOrNull() ?: return 0L
@@ -178,12 +267,21 @@ class PostureAnalysisCoordinator(
     }
 }
 
+data class CalibrationCaptureResult(
+    val success: Boolean,
+    val message: String,
+    val snapshot: PostureAnalysisSnapshot,
+)
+
 data class PostureAnalysisSnapshot(
     val config: AnalysisConfig,
+    val sensorAssignments: List<SensorAssignment>,
     val expectedSensors: Set<Int>,
     val expectedSensorsInferred: Boolean,
+    val sittingCalibration: SittingCalibration?,
     val windowSummary: AnalysisWindowSummary,
     val latestResult: PostureAnalysisResult?,
+    val calibrationMessage: String?,
     val statusMessage: String,
 )
 
@@ -203,19 +301,3 @@ private fun WindowSpec.minDurationMs(): Long =
         is WindowSpec.FixedDuration -> durationMs
         is WindowSpec.DurationRange -> minDurationMs
     }
-
-private fun PostureAnalysisResult.withPostureState(
-    warningThreshold: Float,
-    poorThreshold: Float,
-): PostureAnalysisResult {
-    val adjustedState = if (postureState == PostureState.INCOMPLETE) {
-        postureState
-    } else {
-        when {
-            score <= poorThreshold -> PostureState.POOR
-            score <= warningThreshold -> PostureState.WARNING
-            else -> PostureState.GOOD
-        }
-    }
-    return copy(postureState = adjustedState)
-}

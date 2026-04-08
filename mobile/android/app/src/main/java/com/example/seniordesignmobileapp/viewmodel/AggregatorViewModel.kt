@@ -83,6 +83,17 @@ class AggregatorViewModel(
         controller.restart()
     }
 
+    fun calibrateSittingPosture() {
+        val elapsedRealtimeMs = SystemClock.elapsedRealtime()
+        val result = analysisCoordinator.captureCalibration(
+            nowEpochMs = System.currentTimeMillis(),
+        )
+        analysisState.value = result.snapshot.toUiState(
+            updatedAtElapsedMs = elapsedRealtimeMs,
+            calibrationMessage = result.message,
+        )
+    }
+
     fun startRecording() {
         if (recordingState.value.isRecording) {
             return
@@ -221,7 +232,10 @@ class AggregatorViewModel(
                 status = bleState.networkStatus,
             )
             lastAnalyzedStatusReceivedAtElapsedMs = statusTimestamp
-            analysisState.value = snapshot.toUiState(updatedAtElapsedMs = statusTimestamp)
+            analysisState.value = snapshot.toUiState(
+                updatedAtElapsedMs = statusTimestamp,
+                calibrationMessage = analysisState.value.calibrationMessage,
+            )
         }
 
         val sampleTimestamp = bleState.lastSampleReceivedAtElapsedMs
@@ -234,7 +248,10 @@ class AggregatorViewModel(
                 sample = bleState.latestSample,
             )
             lastAnalyzedSampleReceivedAtElapsedMs = sampleTimestamp
-            analysisState.value = snapshot.toUiState(updatedAtElapsedMs = sampleTimestamp)
+            analysisState.value = snapshot.toUiState(
+                updatedAtElapsedMs = sampleTimestamp,
+                calibrationMessage = analysisState.value.calibrationMessage,
+            )
         }
     }
 
@@ -265,13 +282,17 @@ private data class RecordingState(
 
 private fun com.example.seniordesignmobileapp.domain.PostureAnalysisSnapshot.toUiState(
     updatedAtElapsedMs: Long,
+    calibrationMessage: String?,
 ): AnalysisUiState =
     AnalysisUiState(
         config = config,
+        sensorAssignments = sensorAssignments,
         expectedSensors = expectedSensors,
         expectedSensorsInferred = expectedSensorsInferred,
+        sittingCalibration = sittingCalibration,
         windowSummary = windowSummary,
         latestResult = latestResult,
         lastUpdatedAtElapsedMs = updatedAtElapsedMs,
+        calibrationMessage = calibrationMessage ?: this.calibrationMessage,
         statusMessage = statusMessage,
     )

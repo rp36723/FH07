@@ -74,9 +74,11 @@ data class AnalysisInputWindow(
     val lookbackMs: Long,
     val samplesBySensor: Map<Int, List<ImuSample>>,
     val networkStatus: NetworkStatus?,
+    val sensorAssignments: List<SensorAssignment>,
     val expectedSensors: Set<Int>,
     val availableSensors: Set<Int>,
     val missingSensors: Set<Int>,
+    val sittingCalibration: SittingCalibration? = null,
 )
 
 data class AnalysisWindowSummary(
@@ -99,12 +101,32 @@ enum class PostureAlertCode {
     SENSOR_MISSING,
     LOW_CONFIDENCE,
     INSUFFICIENT_WINDOW,
+    CALIBRATION_REQUIRED,
     ANALYSIS_SKIPPED,
 }
 
 data class PostureAlert(
     val code: PostureAlertCode,
     val message: String,
+)
+
+data class SittingCalibration(
+    val capturedAtEpochMs: Long,
+    val upperBackSensorId: Int,
+    val lowerBackSensorId: Int,
+    val upperBackPitchDeg: Float,
+    val lowerBackPitchDeg: Float,
+    val bendAngleDeg: Float,
+)
+
+data class SittingPostureDetails(
+    val upperBackSensorId: Int?,
+    val lowerBackSensorId: Int?,
+    val upperBackPitchDeg: Float?,
+    val lowerBackPitchDeg: Float?,
+    val bendAngleDeg: Float?,
+    val bendDeltaFromBaselineDeg: Float?,
+    val baselineBendAngleDeg: Float?,
 )
 
 data class PostureAnalysisResult(
@@ -116,4 +138,5 @@ data class PostureAnalysisResult(
     val missingSensors: Set<Int>,
     val lookbackMs: Long,
     val alerts: List<PostureAlert>,
+    val sittingDetails: SittingPostureDetails? = null,
 )

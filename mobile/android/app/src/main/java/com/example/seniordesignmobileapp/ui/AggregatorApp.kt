@@ -84,6 +84,7 @@ fun AggregatorApp(
                 permissionLauncher.launch(REQUIRED_BLE_PERMISSIONS)
             },
             onReconnect = viewModel::reconnect,
+            onCalibrateSitting = viewModel::calibrateSittingPosture,
             onStartRecording = viewModel::startRecording,
             onStopRecording = viewModel::stopRecording,
             onShareSession = { session -> shareSavedSession(context, session) },

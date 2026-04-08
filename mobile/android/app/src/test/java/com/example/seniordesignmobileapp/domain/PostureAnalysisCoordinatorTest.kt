@@ -46,7 +46,7 @@ class PostureAnalysisCoordinatorTest {
                 activityMode = ActivityMode.SITTING,
                 expectedSensors = listOf(
                     SensorAssignment(sensorId = 1, placement = SensorPlacement.LOWER_BACK),
-                    SensorAssignment(sensorId = 2, placement = SensorPlacement.RIGHT_THIGH),
+                    SensorAssignment(sensorId = 2, placement = SensorPlacement.UPPER_BACK),
                 ),
                 windowSpec = WindowSpec.FixedDuration(durationMs = 1_000),
                 historyLookbackMs = 0,
@@ -71,11 +71,18 @@ class PostureAnalysisCoordinatorTest {
         assertEquals(setOf(1), snapshot.windowSummary.availableSensors)
         assertEquals(setOf(2), snapshot.windowSummary.missingSensors)
         assertEquals(
-            "Running partial analysis while waiting for all expected sensors.",
+            "Capture an upright sitting calibration to start scoring.",
             snapshot.statusMessage,
         )
         assertEquals(setOf(1, 2), analyzer.lastInput?.expectedSensors)
         assertEquals(setOf(2), analyzer.lastInput?.missingSensors)
+        assertEquals(
+            listOf(
+                SensorAssignment(sensorId = 1, placement = SensorPlacement.LOWER_BACK),
+                SensorAssignment(sensorId = 2, placement = SensorPlacement.UPPER_BACK),
+            ),
+            analyzer.lastInput?.sensorAssignments,
+        )
         assertEquals(82f, snapshot.latestResult?.score)
     }
 
@@ -132,34 +139,98 @@ class PostureAnalysisCoordinatorTest {
             analyzer = analyzer,
         )
 
-        val snapshot = coordinator.onSample(
+        coordinator.onNetworkStatus(
+            receivedAtEpochMs = 4_900L,
+            status = networkStatus(sensorIds = listOf(1, 2)),
+        )
+        coordinator.onSample(
             receivedAtEpochMs = 5_000L,
             sample = sample(sensorId = 1, seq = 1),
         )
+        coordinator.onSample(
+            receivedAtEpochMs = 5_000L,
+            sample = sample(sensorId = 2, seq = 1),
+        )
+        val finalSnapshot = coordinator.currentSnapshot(nowEpochMs = 5_000L)
 
         assertTrue(
-            snapshot.latestResult?.alerts?.any { alert ->
+            finalSnapshot.latestResult?.alerts?.any { alert ->
                 alert.message.contains("minimum is preferred")
             } == true
         )
         assertEquals(
             "Collecting more sample history for the requested analysis window.",
-            snapshot.statusMessage,
+            finalSnapshot.statusMessage,
+        )
+    }
+
+    @Test
+    fun captureCalibration_usesInferredLowerAndUpperBackSensors() {
+        val coordinator = PostureAnalysisCoordinator()
+
+        coordinator.onNetworkStatus(
+            receivedAtEpochMs = 1_000L,
+            status = networkStatus(sensorIds = listOf(3, 7)),
+        )
+        coordinator.onSample(
+            receivedAtEpochMs = 1_100L,
+            sample = sample(sensorId = 3, seq = 1, ax = 0, ay = 0, az = 1000),
+        )
+        coordinator.onSample(
+            receivedAtEpochMs = 1_100L,
+            sample = sample(sensorId = 7, seq = 1, ax = 0, ay = 0, az = 1000),
+        )
+
+        val result = coordinator.captureCalibration(nowEpochMs = 1_200L)
+
+        assertTrue(result.success)
+        assertEquals(
+            listOf(
+                SensorAssignment(sensorId = 3, placement = SensorPlacement.LOWER_BACK),
+                SensorAssignment(sensorId = 7, placement = SensorPlacement.UPPER_BACK),
+            ),
+            result.snapshot.sensorAssignments,
+        )
+        assertEquals(0f, result.snapshot.sittingCalibration?.bendAngleDeg)
+    }
+
+    @Test
+    fun captureCalibration_requiresBothBackSensorsWithSamples() {
+        val coordinator = PostureAnalysisCoordinator()
+
+        coordinator.onNetworkStatus(
+            receivedAtEpochMs = 1_000L,
+            status = networkStatus(sensorIds = listOf(3, 7)),
+        )
+        coordinator.onSample(
+            receivedAtEpochMs = 1_100L,
+            sample = sample(sensorId = 3, seq = 1),
+        )
+
+        val result = coordinator.captureCalibration(nowEpochMs = 1_200L)
+
+        assertFalse(result.success)
+        assertEquals(
+            "Calibration needs both upper and lower back sensors with live samples.",
+            result.message,
         )
     }
 
     private fun sample(
         sensorId: Int,
         seq: Int,
+        ax: Int = 1,
+        ay: Int = 2,
+        az: Int = 3,
     ): ImuSample =
         ImuSample(
             version = 1,
             sensorId = sensorId,
             seq = seq,
             timestampMs = seq.toLong() * 10,
-            ax = 1,
-            ay = 2,
-            az = 3,
+            ax = ax,
+            ay = ay,
+            az = az,
             gx = 4,
             gy = 5,
             gz = 6,
