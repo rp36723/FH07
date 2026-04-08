@@ -17,6 +17,7 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.ParcelUuid
+import android.util.Log
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,9 +46,28 @@ private const val STATUS_REFRESH_MS = 1_500L
 private const val RECONNECT_DELAY_MS = 1_000L
 private const val TIMEOUT_RECONNECT_DELAY_MS = 3_000L
 private const val CONNECTION_TIMEOUT_MS = 12_000L
+private const val MAX_EVENT_LOG_ENTRIES = 10
+private const val TAG = "BleAggregator"
+
+enum class BleConnectionPhase(val label: String) {
+    IDLE("Idle"),
+    WAITING_FOR_PERMISSIONS("Waiting for permissions"),
+    BLUETOOTH_UNAVAILABLE("Bluetooth unavailable"),
+    BLUETOOTH_DISABLED("Bluetooth disabled"),
+    SCANNING("Scanning"),
+    CONNECTING("Connecting"),
+    REQUESTING_MTU("Requesting MTU"),
+    DISCOVERING_SERVICES("Discovering services"),
+    SUBSCRIBING("Subscribing"),
+    READING_STATUS("Reading status"),
+    STREAMING("Streaming"),
+    RECOVERING("Recovering"),
+    DISCONNECTED("Disconnected"),
+}
 
 data class AggregatorUiState(
     val connectionState: String = "Waiting for Bluetooth permissions",
+    val connectionPhase: BleConnectionPhase = BleConnectionPhase.WAITING_FOR_PERMISSIONS,
     val deviceName: String = AGGREGATOR_DEVICE_NAME,
     val isScanning: Boolean = false,
     val isConnected: Boolean = false,
@@ -56,6 +76,9 @@ data class AggregatorUiState(
     val lastSampleHex: String? = null,
     val lastStatusHex: String? = null,
     val errorMessage: String? = null,
+    val lastFailureReason: String? = null,
+    val reconnectCount: Int = 0,
+    val recentEvents: List<String> = emptyList(),
 )
 
 class BleAggregatorController(
@@ -86,6 +109,7 @@ class BleAggregatorController(
             _uiState.update {
                 it.copy(
                     connectionState = "Waiting for Bluetooth permissions",
+                    connectionPhase = BleConnectionPhase.WAITING_FOR_PERMISSIONS,
                     isScanning = false,
                     isConnected = false,
                 )
@@ -98,11 +122,13 @@ class BleAggregatorController(
             _uiState.update {
                 it.copy(
                     connectionState = "Bluetooth is unavailable on this device",
+                    connectionPhase = BleConnectionPhase.BLUETOOTH_UNAVAILABLE,
                     isScanning = false,
                     isConnected = false,
                     errorMessage = "No Bluetooth adapter was found.",
                 )
             }
+            logEvent("Bluetooth adapter unavailable")
             return
         }
 
@@ -110,11 +136,13 @@ class BleAggregatorController(
             _uiState.update {
                 it.copy(
                     connectionState = "Enable Bluetooth to scan for BLE-Aggregator",
+                    connectionPhase = BleConnectionPhase.BLUETOOTH_DISABLED,
                     isScanning = false,
                     isConnected = false,
                     errorMessage = "Bluetooth is turned off.",
                 )
             }
+            logEvent("Bluetooth is disabled")
             return
         }
 
@@ -141,10 +169,12 @@ class BleAggregatorController(
         _uiState.update {
             it.copy(
                 connectionState = "Stopped",
+                connectionPhase = BleConnectionPhase.IDLE,
                 isScanning = false,
                 isConnected = false,
             )
         }
+        logEvent("Controller stopped")
     }
 
     @SuppressLint("MissingPermission")
@@ -181,26 +211,32 @@ class BleAggregatorController(
             _uiState.update {
                 it.copy(
                     connectionState = "Scanning for $AGGREGATOR_DEVICE_NAME",
+                    connectionPhase = BleConnectionPhase.SCANNING,
                     deviceName = AGGREGATOR_DEVICE_NAME,
                     isScanning = true,
                     isConnected = false,
                     errorMessage = null,
                 )
             }
+            logEvent("Scan started for $AGGREGATOR_DEVICE_NAME")
         } catch (securityError: SecurityException) {
             _uiState.update {
                 it.copy(
                     connectionState = "Bluetooth permissions are missing",
+                    connectionPhase = BleConnectionPhase.WAITING_FOR_PERMISSIONS,
                     errorMessage = securityError.message,
                 )
             }
+            logEvent("Scan blocked by missing permissions")
         } catch (stateError: IllegalStateException) {
             _uiState.update {
                 it.copy(
                     connectionState = "BLE scan could not start",
+                    connectionPhase = BleConnectionPhase.RECOVERING,
                     errorMessage = stateError.message,
                 )
             }
+            logEvent("Scan failed to start: ${stateError.message ?: "IllegalStateException"}")
             scheduleReconnect("Retrying BLE scan")
         }
     }
@@ -233,12 +269,14 @@ class BleAggregatorController(
         _uiState.update {
             it.copy(
                 connectionState = "Connecting to $name",
+                connectionPhase = BleConnectionPhase.CONNECTING,
                 deviceName = name,
                 isScanning = false,
                 isConnected = false,
                 errorMessage = null,
             )
         }
+        logEvent("Connecting to $name")
         currentGatt = device.connectGatt(appContext, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
         startConnectionWatchdog("Connecting to $name timed out")
     }
@@ -268,10 +306,15 @@ class BleAggregatorController(
             return
         }
 
+        _uiState.update {
+            it.copy(connectionPhase = BleConnectionPhase.READING_STATUS)
+        }
+        logEvent("Reading network_status")
         statusReadInFlight = true
         val started = gatt.readCharacteristic(characteristic)
         if (!started) {
             statusReadInFlight = false
+            logEvent("network_status read request was rejected by Android")
         }
     }
 
@@ -284,6 +327,7 @@ class BleAggregatorController(
             _uiState.update {
                 it.copy(errorMessage = "Failed to enable notifications for sample_stream.")
             }
+            logEvent("setCharacteristicNotification failed")
             recoverConnection("Unable to enable sample notifications")
             return
         }
@@ -293,9 +337,15 @@ class BleAggregatorController(
             _uiState.update {
                 it.copy(errorMessage = "sample_stream is missing the CCC descriptor.")
             }
+            logEvent("sample_stream CCC descriptor missing")
             recoverConnection("sample_stream CCC descriptor was missing")
             return
         }
+
+        _uiState.update {
+            it.copy(connectionPhase = BleConnectionPhase.SUBSCRIBING)
+        }
+        logEvent("Writing CCCD to subscribe to sample_stream")
 
         val status = gatt.writeDescriptor(
             descriptor,
@@ -305,6 +355,7 @@ class BleAggregatorController(
             _uiState.update {
                 it.copy(errorMessage = "Failed to subscribe to sample_stream (code $status).")
             }
+            logEvent("CCCD write request rejected with code $status")
             recoverConnection("Unable to subscribe to sample_stream")
         }
     }
@@ -357,10 +408,13 @@ class BleAggregatorController(
             _uiState.update {
                 it.copy(
                     connectionState = message,
+                    connectionPhase = BleConnectionPhase.RECOVERING,
                     isScanning = false,
                     isConnected = false,
+                    reconnectCount = it.reconnectCount + 1,
                 )
             }
+            logEvent("$message in ${delayMs}ms")
             delay(delayMs)
             if (isRunning && currentGatt == null && !isScanning) {
                 startScan()
@@ -391,10 +445,13 @@ class BleAggregatorController(
         _uiState.update {
             it.copy(
                 connectionState = message,
+                connectionPhase = BleConnectionPhase.RECOVERING,
                 isScanning = false,
                 isConnected = false,
+                lastFailureReason = message,
             )
         }
+        logEvent("Recovering connection: $message")
 
         scheduleReconnect(
             message = "Reconnecting to $AGGREGATOR_DEVICE_NAME",
@@ -414,14 +471,24 @@ class BleAggregatorController(
         _uiState.update {
             it.copy(
                 connectionState = message,
+                connectionPhase = BleConnectionPhase.DISCONNECTED,
                 isScanning = false,
                 isConnected = false,
             )
         }
+        logEvent(message)
 
         if (restartScan && isRunning) {
             scheduleReconnect("Reconnecting to $AGGREGATOR_DEVICE_NAME")
         }
+    }
+
+    private fun logEvent(message: String) {
+        _uiState.update { state ->
+            val nextEvents = (state.recentEvents + message).takeLast(MAX_EVENT_LOG_ENTRIES)
+            state.copy(recentEvents = nextEvents)
+        }
+        Log.i(TAG, message)
     }
 
     private val scanCallback = object : ScanCallback() {
@@ -432,6 +499,9 @@ class BleAggregatorController(
                 return
             }
 
+            logEvent(
+                "Found ${deviceName ?: AGGREGATOR_DEVICE_NAME} rssi=${result.rssi} address=${result.device.address}"
+            )
             stopScan()
             connect(result.device)
         }
@@ -441,10 +511,13 @@ class BleAggregatorController(
             _uiState.update {
                 it.copy(
                     connectionState = "BLE scan failed",
+                    connectionPhase = BleConnectionPhase.RECOVERING,
                     isScanning = false,
                     errorMessage = "Android scan error code: $errorCode",
+                    lastFailureReason = "Android scan error code: $errorCode",
                 )
             }
+            logEvent("Scan failed with code $errorCode")
             scheduleReconnect("Retrying BLE scan")
         }
     }
@@ -456,6 +529,7 @@ class BleAggregatorController(
                 return
             }
 
+            logEvent("Connection state changed: status=$status newState=$newState")
             if (status != BluetoothGatt.GATT_SUCCESS) {
                 val errorMessage = describeGattConnectionStatus(status)
                 recoverConnection(
@@ -471,13 +545,16 @@ class BleAggregatorController(
                     _uiState.update {
                         it.copy(
                             connectionState = "Connected to ${it.deviceName}, requesting MTU",
+                            connectionPhase = BleConnectionPhase.REQUESTING_MTU,
                             isConnected = true,
                             errorMessage = null,
                         )
                     }
+                    logEvent("Connected, requesting MTU $TARGET_MTU")
 
                     startConnectionWatchdog("Service discovery timed out")
                     if (!gatt.requestMtu(TARGET_MTU)) {
+                        logEvent("MTU request rejected, falling back to service discovery")
                         gatt.discoverServices()
                     }
                 }
@@ -495,8 +572,14 @@ class BleAggregatorController(
 
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 _uiState.update {
-                    it.copy(connectionState = "MTU $mtu negotiated, discovering services")
+                    it.copy(
+                        connectionState = "MTU $mtu negotiated, discovering services",
+                        connectionPhase = BleConnectionPhase.DISCOVERING_SERVICES,
+                    )
                 }
+                logEvent("MTU negotiated: $mtu")
+            } else {
+                logEvent("MTU change failed with status $status, discovering services anyway")
             }
 
             gatt.discoverServices()
@@ -510,9 +593,11 @@ class BleAggregatorController(
             if (status != BluetoothGatt.GATT_SUCCESS) {
                 handleDisconnect("Service discovery failed", restartScan = true)
                 _uiState.update { it.copy(errorMessage = "GATT service discovery status: $status") }
+                logEvent("Service discovery failed with status $status")
                 return
             }
 
+            logEvent("Services discovered")
             val service = gatt.getService(GATT_SERVICE_UUID)
             val sampleCharacteristic = service?.getCharacteristic(SAMPLE_STREAM_UUID)
             val statusCharacteristic = service?.getCharacteristic(NETWORK_STATUS_UUID)
@@ -529,6 +614,7 @@ class BleAggregatorController(
             _uiState.update {
                 it.copy(
                     connectionState = "Connected to ${it.deviceName}",
+                    connectionPhase = BleConnectionPhase.SUBSCRIBING,
                     isConnected = true,
                     errorMessage = null,
                 )
@@ -551,14 +637,24 @@ class BleAggregatorController(
             statusReadInFlight = false
             if (status != BluetoothGatt.GATT_SUCCESS) {
                 _uiState.update {
-                    it.copy(errorMessage = "network_status read failed with status $status")
+                    it.copy(
+                        connectionPhase = BleConnectionPhase.STREAMING,
+                        errorMessage = "network_status read failed with status $status",
+                        lastFailureReason = "network_status read failed with status $status",
+                    )
                 }
+                logEvent("network_status read failed with status $status")
                 return
             }
 
             val decoded = decodeNetworkStatus(value)
             _uiState.update {
                 it.copy(
+                    connectionPhase = if (it.isConnected) {
+                        BleConnectionPhase.STREAMING
+                    } else {
+                        it.connectionPhase
+                    },
                     networkStatus = decoded ?: it.networkStatus,
                     lastStatusHex = value.toHexString(),
                     errorMessage = if (decoded == null) {
@@ -566,8 +662,20 @@ class BleAggregatorController(
                     } else {
                         null
                     },
+                    lastFailureReason = if (decoded == null) {
+                        "Failed to decode network_status (${value.size} bytes)."
+                    } else {
+                        it.lastFailureReason
+                    },
                 )
             }
+            logEvent(
+                if (decoded == null) {
+                    "network_status decode failed (${value.size} bytes)"
+                } else {
+                    "network_status updated: ${decoded.activeSensorCount} sensors"
+                }
+            )
         }
 
         override fun onCharacteristicChanged(
@@ -582,6 +690,7 @@ class BleAggregatorController(
             val decoded = decodeImuSample(value)
             _uiState.update {
                 it.copy(
+                    connectionPhase = BleConnectionPhase.STREAMING,
                     latestSample = decoded ?: it.latestSample,
                     lastSampleHex = value.toHexString(),
                     errorMessage = if (decoded == null) {
@@ -589,8 +698,20 @@ class BleAggregatorController(
                     } else {
                         null
                     },
+                    lastFailureReason = if (decoded == null) {
+                        "Failed to decode sample_stream packet (${value.size} bytes)."
+                    } else {
+                        it.lastFailureReason
+                    },
                 )
             }
+            logEvent(
+                if (decoded == null) {
+                    "sample_stream decode failed (${value.size} bytes)"
+                } else {
+                    "Sample sensor=${decoded.sensorId} seq=${decoded.seq}"
+                }
+            )
         }
 
         override fun onDescriptorWrite(
@@ -612,13 +733,30 @@ class BleAggregatorController(
                     } else {
                         "Connected to ${it.deviceName}"
                     },
+                    connectionPhase = if (status == BluetoothGatt.GATT_SUCCESS) {
+                        BleConnectionPhase.STREAMING
+                    } else {
+                        BleConnectionPhase.SUBSCRIBING
+                    },
                     errorMessage = if (status == BluetoothGatt.GATT_SUCCESS) {
                         it.errorMessage
                     } else {
                         "Failed to subscribe to sample_stream (status $status)."
                     },
+                    lastFailureReason = if (status == BluetoothGatt.GATT_SUCCESS) {
+                        it.lastFailureReason
+                    } else {
+                        "Failed to subscribe to sample_stream (status $status)."
+                    },
                 )
             }
+            logEvent(
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    "Subscribed to sample_stream"
+                } else {
+                    "Descriptor write failed with status $status"
+                }
+            )
 
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 requestNetworkStatusRead()

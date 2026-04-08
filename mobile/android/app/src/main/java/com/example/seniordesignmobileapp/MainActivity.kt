@@ -137,6 +137,22 @@ private fun AggregatorScreen(
             style = MaterialTheme.typography.bodyLarge,
         )
 
+        DetailCard(title = "Diagnostics") {
+            Text("Phase: ${uiState.connectionPhase.label}")
+            Text("Reconnect attempts: ${uiState.reconnectCount}")
+            Text("Connected: ${if (uiState.isConnected) "yes" else "no"}")
+            uiState.lastFailureReason?.let { reason ->
+                Text("Last failure: $reason")
+            }
+
+            if (uiState.recentEvents.isNotEmpty()) {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                uiState.recentEvents.takeLast(6).forEach { event ->
+                    Text(event, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -247,7 +263,18 @@ private fun AggregatorScreenPreview() {
         AggregatorScreen(
             uiState = AggregatorUiState(
                 connectionState = "Streaming samples from BLE-Aggregator",
+                connectionPhase = BleConnectionPhase.STREAMING,
                 isConnected = true,
+                reconnectCount = 2,
+                lastFailureReason = "GATT connection timed out (status 8)",
+                recentEvents = listOf(
+                    "Scan started for BLE-Aggregator",
+                    "Found BLE-Aggregator rssi=-58 address=AA:BB:CC:DD:EE:FF",
+                    "Connected, requesting MTU 64",
+                    "Services discovered",
+                    "Subscribed to sample_stream",
+                    "network_status updated: 2 sensors",
+                ),
                 latestSample = ImuSample(
                     version = 1,
                     sensorId = 7,
@@ -284,7 +311,9 @@ private fun AggregatorScreenPreview() {
 private fun PermissionsPreview() {
     SeniorDesignMobileAppTheme {
         AggregatorScreen(
-            uiState = AggregatorUiState(),
+            uiState = AggregatorUiState(
+                recentEvents = listOf("Waiting for Bluetooth permissions"),
+            ),
             permissionsGranted = false,
             onGrantPermissions = {},
             onReconnect = {},
