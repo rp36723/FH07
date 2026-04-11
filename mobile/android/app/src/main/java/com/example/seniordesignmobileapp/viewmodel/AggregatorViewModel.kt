@@ -11,7 +11,11 @@ import com.example.seniordesignmobileapp.ble.BleAggregatorController
 import com.example.seniordesignmobileapp.domain.PostureAnalysisCoordinator
 import com.example.seniordesignmobileapp.model.AggregatorUiState
 import com.example.seniordesignmobileapp.model.AnalysisUiState
+import com.example.seniordesignmobileapp.model.ModeledGravityVector
+import com.example.seniordesignmobileapp.model.ModeledNodeUiState
+import com.example.seniordesignmobileapp.model.ModelingUiState
 import com.example.seniordesignmobileapp.model.SavedSessionSummary
+import com.example.seniordesignmobileapp.modeling.NodePoseMath
 import com.example.seniordesignmobileapp.recording.SessionRecorder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -30,6 +34,8 @@ class AggregatorViewModel(
     private val recordingState = MutableStateFlow(RecordingState())
     private val analysisCoordinator = PostureAnalysisCoordinator()
     private val analysisState = MutableStateFlow(AnalysisUiState())
+    private val modelingState = MutableStateFlow(ModelingUiState())
+    private val latestSamplesBySensor = linkedMapOf<Int, TimedSensorSample>()
     private var lastRecordedSampleReceivedAtElapsedMs: Long? = null
     private var lastRecordedStatusReceivedAtElapsedMs: Long? = null
     private var lastAnalyzedSampleReceivedAtElapsedMs: Long? = null
@@ -39,7 +45,8 @@ class AggregatorViewModel(
         controller.uiState,
         recordingState,
         analysisState,
-    ) { bleState, recording, analysis ->
+        modelingState,
+    ) { bleState, recording, analysis, modeling ->
         bleState.copy(
             isRecording = recording.isRecording,
             recordingSessionName = recording.sessionName,
@@ -50,6 +57,7 @@ class AggregatorViewModel(
             savedSessions = recording.savedSessions,
             recordingErrorMessage = recording.errorMessage,
             analysis = analysis,
+            modeling = modeling,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -65,6 +73,7 @@ class AggregatorViewModel(
             controller.uiState.collect { bleState ->
                 recordIfNeeded(bleState)
                 analyzeIfNeeded(bleState)
+                updateModelingState(bleState)
             }
         }
     }
@@ -92,6 +101,10 @@ class AggregatorViewModel(
             updatedAtElapsedMs = elapsedRealtimeMs,
             calibrationMessage = result.message,
         )
+        refreshModelingState(
+            bleState = controller.uiState.value,
+            analysis = analysisState.value,
+        )
     }
 
     fun setUpperBackSensor(
@@ -106,6 +119,10 @@ class AggregatorViewModel(
             updatedAtElapsedMs = elapsedRealtimeMs,
             calibrationMessage = snapshot.calibrationMessage,
         )
+        refreshModelingState(
+            bleState = controller.uiState.value,
+            analysis = analysisState.value,
+        )
     }
 
     fun setLowerBackSensor(
@@ -119,6 +136,10 @@ class AggregatorViewModel(
         analysisState.value = snapshot.toUiState(
             updatedAtElapsedMs = elapsedRealtimeMs,
             calibrationMessage = snapshot.calibrationMessage,
+        )
+        refreshModelingState(
+            bleState = controller.uiState.value,
+            analysis = analysisState.value,
         )
     }
 
@@ -292,8 +313,74 @@ class AggregatorViewModel(
     private fun resetAnalysis() {
         analysisCoordinator.clear()
         analysisState.value = AnalysisUiState()
+        latestSamplesBySensor.clear()
+        modelingState.value = ModelingUiState()
         lastAnalyzedSampleReceivedAtElapsedMs = null
         lastAnalyzedStatusReceivedAtElapsedMs = null
+    }
+
+    private fun updateModelingState(bleState: AggregatorUiState) {
+        val sample = bleState.latestSample
+        val sampleTimestamp = bleState.lastSampleReceivedAtElapsedMs
+        if (sample != null && sampleTimestamp != null) {
+            latestSamplesBySensor[sample.sensorId] = TimedSensorSample(
+                sample = sample,
+                receivedAtElapsedMs = sampleTimestamp,
+            )
+        }
+        refreshModelingState(
+            bleState = bleState,
+            analysis = analysisState.value,
+        )
+    }
+
+    private fun refreshModelingState(
+        bleState: AggregatorUiState,
+        analysis: AnalysisUiState,
+    ) {
+        val liveSensorIds = bleState.networkStatus?.sensors
+            ?.map { it.sensorId }
+            ?.toSet()
+            .orEmpty()
+        val placementBySensorId = analysis.sensorAssignments.associate { assignment ->
+            assignment.sensorId to assignment.placement
+        }
+        val sensorIds = (liveSensorIds + analysis.availableSensorIds + latestSamplesBySensor.keys)
+            .toSet()
+            .sorted()
+
+        val nodes = sensorIds.map { sensorId ->
+            val timedSample = latestSamplesBySensor[sensorId]
+            val pose = timedSample?.let { NodePoseMath.fromSample(it.sample) }
+            ModeledNodeUiState(
+                sensorId = sensorId,
+                placement = placementBySensorId[sensorId],
+                isLiveInNetworkStatus = sensorId in liveSensorIds,
+                seq = timedSample?.sample?.seq,
+                pitchDeg = pose?.pitchDeg,
+                rollDeg = pose?.rollDeg,
+                gravityVector = pose?.gravityVector?.let { gravity ->
+                    ModeledGravityVector(
+                        x = gravity.x,
+                        y = gravity.y,
+                        z = gravity.z,
+                    )
+                },
+                lastSampleReceivedAtElapsedMs = timedSample?.receivedAtElapsedMs,
+            )
+        }
+
+        val statusMessage = when {
+            nodes.isEmpty() -> "Waiting for network status and live IMU samples before the modeling scene can render."
+            nodes.any { it.gravityVector != null } -> "Orientation-only node scene from the latest per-sensor IMU samples. Positions are schematic until a full spatial model exists."
+            else -> "Sensors are known, but the app is still waiting for per-sensor IMU samples to estimate orientation."
+        }
+
+        modelingState.value = ModelingUiState(
+            nodes = nodes,
+            lastUpdatedAtElapsedMs = bleState.lastSampleReceivedAtElapsedMs ?: bleState.lastStatusReceivedAtElapsedMs,
+            statusMessage = statusMessage,
+        )
     }
 }
 
@@ -306,6 +393,11 @@ private data class RecordingState(
     val recordedStatusCount: Int = 0,
     val savedSessions: List<SavedSessionSummary> = emptyList(),
     val errorMessage: String? = null,
+)
+
+private data class TimedSensorSample(
+    val sample: com.example.seniordesignmobileapp.model.ImuSample,
+    val receivedAtElapsedMs: Long,
 )
 
 private fun com.example.seniordesignmobileapp.domain.PostureAnalysisSnapshot.toUiState(
