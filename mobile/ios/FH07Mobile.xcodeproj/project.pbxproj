@@ -1,0 +1,529 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		F8B1000000000000000001 /* FH07MobileApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000001 /* FH07MobileApp.swift */; };
+		F8B1000000000000000002 /* AnalysisModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000002 /* AnalysisModels.swift */; };
+		F8B1000000000000000003 /* PostureAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000003 /* PostureAnalyzer.swift */; };
+		F8B1000000000000000004 /* BleAggregatorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000004 /* BleAggregatorController.swift */; };
+		F8B1000000000000000005 /* BleProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000005 /* BleProtocol.swift */; };
+		F8B1000000000000000006 /* PostureAnalysisCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000006 /* PostureAnalysisCoordinator.swift */; };
+		F8B1000000000000000007 /* AggregatorUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000007 /* AggregatorUiState.swift */; };
+		F8B1000000000000000008 /* AnalysisUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000008 /* AnalysisUiState.swift */; };
+		F8B1000000000000000009 /* ModelingUiState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000009 /* ModelingUiState.swift */; };
+		F8B1000000000000000010 /* ProtocolModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000010 /* ProtocolModels.swift */; };
+		F8B1000000000000000011 /* NodePoseMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000011 /* NodePoseMath.swift */; };
+		F8B1000000000000000012 /* SessionRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000012 /* SessionRecorder.swift */; };
+		F8B1000000000000000013 /* AggregatorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000013 /* AggregatorApp.swift */; };
+		F8B1000000000000000014 /* AggregatorShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000014 /* AggregatorShell.swift */; };
+		F8B1000000000000000015 /* PageComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000015 /* PageComponents.swift */; };
+		F8B1000000000000000016 /* ActivityPlaceholderPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000016 /* ActivityPlaceholderPage.swift */; };
+		F8B1000000000000000017 /* CyclingPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000017 /* CyclingPage.swift */; };
+		F8B1000000000000000018 /* DiagnosticsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000018 /* DiagnosticsPage.swift */; };
+		F8B1000000000000000019 /* ExportPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000019 /* ExportPage.swift */; };
+		F8B1000000000000000020 /* ModelingPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000020 /* ModelingPage.swift */; };
+		F8B1000000000000000021 /* RunningPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000021 /* RunningPage.swift */; };
+		F8B1000000000000000022 /* SittingPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000022 /* SittingPage.swift */; };
+		F8B1000000000000000023 /* SessionShare.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000023 /* SessionShare.swift */; };
+		F8B1000000000000000024 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000024 /* Theme.swift */; };
+		F8B1000000000000000025 /* AggregatorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000025 /* AggregatorViewModel.swift */; };
+		F8B1000000000000000026 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000026 /* Assets.xcassets */; };
+		F8B1000000000000000027 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F8C1000000000000000027 /* Preview Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		F8C1000000000000000001 /* FH07MobileApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FH07MobileApp.swift; sourceTree = "<group>"; };
+		F8C1000000000000000002 /* AnalysisModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisModels.swift; sourceTree = "<group>"; };
+		F8C1000000000000000003 /* PostureAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureAnalyzer.swift; sourceTree = "<group>"; };
+		F8C1000000000000000004 /* BleAggregatorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BleAggregatorController.swift; sourceTree = "<group>"; };
+		F8C1000000000000000005 /* BleProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BleProtocol.swift; sourceTree = "<group>"; };
+		F8C1000000000000000006 /* PostureAnalysisCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureAnalysisCoordinator.swift; sourceTree = "<group>"; };
+		F8C1000000000000000007 /* AggregatorUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AggregatorUiState.swift; sourceTree = "<group>"; };
+		F8C1000000000000000008 /* AnalysisUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisUiState.swift; sourceTree = "<group>"; };
+		F8C1000000000000000009 /* ModelingUiState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelingUiState.swift; sourceTree = "<group>"; };
+		F8C1000000000000000010 /* ProtocolModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtocolModels.swift; sourceTree = "<group>"; };
+		F8C1000000000000000011 /* NodePoseMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodePoseMath.swift; sourceTree = "<group>"; };
+		F8C1000000000000000012 /* SessionRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRecorder.swift; sourceTree = "<group>"; };
+		F8C1000000000000000013 /* AggregatorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AggregatorApp.swift; sourceTree = "<group>"; };
+		F8C1000000000000000014 /* AggregatorShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AggregatorShell.swift; sourceTree = "<group>"; };
+		F8C1000000000000000015 /* PageComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageComponents.swift; sourceTree = "<group>"; };
+		F8C1000000000000000016 /* ActivityPlaceholderPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityPlaceholderPage.swift; sourceTree = "<group>"; };
+		F8C1000000000000000017 /* CyclingPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CyclingPage.swift; sourceTree = "<group>"; };
+		F8C1000000000000000018 /* DiagnosticsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsPage.swift; sourceTree = "<group>"; };
+		F8C1000000000000000019 /* ExportPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportPage.swift; sourceTree = "<group>"; };
+		F8C1000000000000000020 /* ModelingPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelingPage.swift; sourceTree = "<group>"; };
+		F8C1000000000000000021 /* RunningPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningPage.swift; sourceTree = "<group>"; };
+		F8C1000000000000000022 /* SittingPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SittingPage.swift; sourceTree = "<group>"; };
+		F8C1000000000000000023 /* SessionShare.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionShare.swift; sourceTree = "<group>"; };
+		F8C1000000000000000024 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		F8C1000000000000000025 /* AggregatorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AggregatorViewModel.swift; sourceTree = "<group>"; };
+		F8C1000000000000000026 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F8C1000000000000000027 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		F8C1000000000000000028 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F8C1000000000000000029 /* FH07Mobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FH07Mobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F8D1000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		F8E1000000000000000001 /* root */ = {
+			isa = PBXGroup;
+			children = (
+				F8E1000000000000000002 /* FH07Mobile */,
+				F8E1000000000000000015 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F8E1000000000000000002 /* FH07Mobile */ = {
+			isa = PBXGroup;
+			children = (
+				F8C1000000000000000001 /* FH07MobileApp.swift */,
+				F8C1000000000000000028 /* Info.plist */,
+				F8C1000000000000000026 /* Assets.xcassets */,
+				F8E1000000000000000003 /* Analysis */,
+				F8E1000000000000000004 /* BLE */,
+				F8E1000000000000000005 /* Domain */,
+				F8E1000000000000000006 /* Model */,
+				F8E1000000000000000007 /* Modeling */,
+				F8E1000000000000000008 /* Recording */,
+				F8E1000000000000000009 /* UI */,
+				F8E1000000000000000013 /* ViewModel */,
+				F8E1000000000000000014 /* Preview Content */,
+			);
+			path = FH07Mobile;
+			sourceTree = "<group>";
+		};
+		F8E1000000000000000003 /* Analysis */ = {
+			isa = PBXGroup;
+			children = (
+				F8C1000000000000000002 /* AnalysisModels.swift */,
+				F8C1000000000000000003 /* PostureAnalyzer.swift */,
+			);
+			path = Analysis;
+			sourceTree = "<group>";
+		};
+		F8E1000000000000000004 /* BLE */ = {
+			isa = PBXGroup;
+			children = (
+				F8C1000000000000000004 /* BleAggregatorController.swift */,
+				F8C1000000000000000005 /* BleProtocol.swift */,
+			);
+			path = BLE;
+			sourceTree = "<group>";
+		};
+		F8E1000000000000000005 /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+				F8C1000000000000000006 /* PostureAnalysisCoordinator.swift */,
+			);
+			path = Domain;
+			sourceTree = "<group>";
+		};
+		F8E1000000000000000006 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				F8C1000000000000000007 /* AggregatorUiState.swift */,
+				F8C1000000000000000008 /* AnalysisUiState.swift */,
+				F8C1000000000000000009 /* ModelingUiState.swift */,
+				F8C1000000000000000010 /* ProtocolModels.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		F8E1000000000000000007 /* Modeling */ = {
+			isa = PBXGroup;
+			children = (
+				F8C1000000000000000011 /* NodePoseMath.swift */,
+			);
+			path = Modeling;
+			sourceTree = "<group>";
+		};
+		F8E1000000000000000008 /* Recording */ = {
+			isa = PBXGroup;
+			children = (
+				F8C1000000000000000012 /* SessionRecorder.swift */,
+			);
+			path = Recording;
+			sourceTree = "<group>";
+		};
+		F8E1000000000000000009 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				F8C1000000000000000013 /* AggregatorApp.swift */,
+				F8C1000000000000000014 /* AggregatorShell.swift */,
+				F8C1000000000000000023 /* SessionShare.swift */,
+				F8E1000000000000000010 /* Components */,
+				F8E1000000000000000011 /* Pages */,
+				F8E1000000000000000012 /* Theme */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		F8E1000000000000000010 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				F8C1000000000000000015 /* PageComponents.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		F8E1000000000000000011 /* Pages */ = {
+			isa = PBXGroup;
+			children = (
+				F8C1000000000000000016 /* ActivityPlaceholderPage.swift */,
+				F8C1000000000000000017 /* CyclingPage.swift */,
+				F8C1000000000000000018 /* DiagnosticsPage.swift */,
+				F8C1000000000000000019 /* ExportPage.swift */,
+				F8C1000000000000000020 /* ModelingPage.swift */,
+				F8C1000000000000000021 /* RunningPage.swift */,
+				F8C1000000000000000022 /* SittingPage.swift */,
+			);
+			path = Pages;
+			sourceTree = "<group>";
+		};
+		F8E1000000000000000012 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				F8C1000000000000000024 /* Theme.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		F8E1000000000000000013 /* ViewModel */ = {
+			isa = PBXGroup;
+			children = (
+				F8C1000000000000000025 /* AggregatorViewModel.swift */,
+			);
+			path = ViewModel;
+			sourceTree = "<group>";
+		};
+		F8E1000000000000000014 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				F8C1000000000000000027 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		F8E1000000000000000015 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F8C1000000000000000029 /* FH07Mobile.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		F8A1000000000000000001 /* FH07Mobile */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F8F1000000000000000001 /* Build configuration list for PBXNativeTarget "FH07Mobile" */;
+			buildPhases = (
+				F8D1000000000000000001 /* Sources */,
+				F8D1000000000000000002 /* Resources */,
+				F8D1000000000000000003 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FH07Mobile;
+			productName = FH07Mobile;
+			productReference = F8C1000000000000000029 /* FH07Mobile.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F8A1000000000000000002 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					F8A1000000000000000001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = F8F1000000000000000002 /* Build configuration list for PBXProject "FH07Mobile" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = F8E1000000000000000001 /* root */;
+			productRefGroup = F8E1000000000000000015 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F8A1000000000000000001 /* FH07Mobile */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F8D1000000000000000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F8B1000000000000000027 /* Preview Assets.xcassets in Resources */,
+				F8B1000000000000000026 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F8D1000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F8B1000000000000000001 /* FH07MobileApp.swift in Sources */,
+				F8B1000000000000000002 /* AnalysisModels.swift in Sources */,
+				F8B1000000000000000003 /* PostureAnalyzer.swift in Sources */,
+				F8B1000000000000000004 /* BleAggregatorController.swift in Sources */,
+				F8B1000000000000000005 /* BleProtocol.swift in Sources */,
+				F8B1000000000000000006 /* PostureAnalysisCoordinator.swift in Sources */,
+				F8B1000000000000000007 /* AggregatorUiState.swift in Sources */,
+				F8B1000000000000000008 /* AnalysisUiState.swift in Sources */,
+				F8B1000000000000000009 /* ModelingUiState.swift in Sources */,
+				F8B1000000000000000010 /* ProtocolModels.swift in Sources */,
+				F8B1000000000000000011 /* NodePoseMath.swift in Sources */,
+				F8B1000000000000000012 /* SessionRecorder.swift in Sources */,
+				F8B1000000000000000013 /* AggregatorApp.swift in Sources */,
+				F8B1000000000000000014 /* AggregatorShell.swift in Sources */,
+				F8B1000000000000000015 /* PageComponents.swift in Sources */,
+				F8B1000000000000000016 /* ActivityPlaceholderPage.swift in Sources */,
+				F8B1000000000000000017 /* CyclingPage.swift in Sources */,
+				F8B1000000000000000018 /* DiagnosticsPage.swift in Sources */,
+				F8B1000000000000000019 /* ExportPage.swift in Sources */,
+				F8B1000000000000000020 /* ModelingPage.swift in Sources */,
+				F8B1000000000000000021 /* RunningPage.swift in Sources */,
+				F8B1000000000000000022 /* SittingPage.swift in Sources */,
+				F8B1000000000000000023 /* SessionShare.swift in Sources */,
+				F8B1000000000000000024 /* Theme.swift in Sources */,
+				F8B1000000000000000025 /* AggregatorViewModel.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		F8F2000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		F8F2000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		F8F2000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"FH07Mobile/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = FH07Mobile/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = NO;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.seniordesignmobileapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F8F2000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"FH07Mobile/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = FH07Mobile/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = NO;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.seniordesignmobileapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F8F1000000000000000001 /* Build configuration list for PBXNativeTarget "FH07Mobile" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F8F2000000000000000003 /* Debug */,
+				F8F2000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F8F1000000000000000002 /* Build configuration list for PBXProject "FH07Mobile" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F8F2000000000000000001 /* Debug */,
+				F8F2000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F8A1000000000000000002 /* Project object */;
+}
