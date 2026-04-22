@@ -129,6 +129,11 @@ data class SittingPostureDetails(
     val baselineBendAngleDeg: Float?,
 )
 
+data class PostureScorePoint(
+    val timestampEpochMs: Long,
+    val score: Float,
+)
+
 data class PostureAnalysisResult(
     val timestampEpochMs: Long,
     val score: Float,

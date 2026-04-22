@@ -415,6 +415,7 @@ private fun com.example.seniordesignmobileapp.domain.PostureAnalysisSnapshot.toU
         sittingCalibration = sittingCalibration,
         windowSummary = windowSummary,
         latestResult = latestResult,
+        scoreHistory = scoreHistory,
         lastUpdatedAtElapsedMs = updatedAtElapsedMs,
         calibrationMessage = calibrationMessage ?: this.calibrationMessage,
         statusMessage = statusMessage,

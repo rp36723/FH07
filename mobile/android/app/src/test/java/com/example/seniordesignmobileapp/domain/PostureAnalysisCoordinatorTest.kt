@@ -165,6 +165,45 @@ class PostureAnalysisCoordinatorTest {
     }
 
     @Test
+    fun onSample_keepsOnlyLastMinuteOfScoreHistory() {
+        val analyzer = RecordingAnalyzer()
+        val coordinator = PostureAnalysisCoordinator(
+            config = AnalysisConfig(
+                activityMode = ActivityMode.SITTING,
+                expectedSensors = emptyList(),
+                windowSpec = WindowSpec.FixedDuration(durationMs = 1_000),
+                historyLookbackMs = 0,
+                allowPartialAnalysis = true,
+                warningScoreThreshold = 70f,
+                poorScoreThreshold = 40f,
+            ),
+            analyzer = analyzer,
+        )
+
+        coordinator.onSample(
+            receivedAtEpochMs = 1_000L,
+            sample = sample(sensorId = 1, seq = 1),
+        )
+        coordinator.onSample(
+            receivedAtEpochMs = 30_000L,
+            sample = sample(sensorId = 1, seq = 2),
+        )
+        val snapshot = coordinator.onSample(
+            receivedAtEpochMs = 65_000L,
+            sample = sample(sensorId = 1, seq = 3),
+        )
+
+        assertEquals(
+            listOf(30_000L, 65_000L),
+            snapshot.scoreHistory.map { it.timestampEpochMs },
+        )
+        assertEquals(
+            listOf(82f, 82f),
+            snapshot.scoreHistory.map { it.score },
+        )
+    }
+
+    @Test
     fun captureCalibration_usesInferredLowerAndUpperBackSensors() {
         val coordinator = PostureAnalysisCoordinator()
 

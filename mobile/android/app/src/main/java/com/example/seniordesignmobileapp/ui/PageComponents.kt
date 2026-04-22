@@ -1,11 +1,15 @@
 package com.example.seniordesignmobileapp.ui
 
 import android.os.SystemClock
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -21,10 +25,15 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.seniordesignmobileapp.analysis.ActivityMode
+import com.example.seniordesignmobileapp.analysis.PostureScorePoint
 import com.example.seniordesignmobileapp.analysis.PostureState
 import com.example.seniordesignmobileapp.analysis.SensorPlacement
 import com.example.seniordesignmobileapp.analysis.WindowSpec
@@ -38,6 +47,8 @@ import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+private const val SCORE_HISTORY_WINDOW_MS = 60_000L
 
 @Composable
 fun PageContent(
@@ -255,6 +266,138 @@ fun AnalysisCard(
                 }
             }
         }
+
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        ScoreHistoryChartSection(
+            scoreHistory = analysis.scoreHistory,
+            currentEpochMs = System.currentTimeMillis(),
+        )
+    }
+}
+
+@Composable
+private fun ScoreHistoryChartSection(
+    scoreHistory: List<PostureScorePoint>,
+    currentEpochMs: Long,
+) {
+    val visiblePoints = scoreHistory
+        .filter { it.timestampEpochMs >= currentEpochMs - SCORE_HISTORY_WINDOW_MS }
+        .sortedBy { it.timestampEpochMs }
+
+    Text(
+        text = "Score history",
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.SemiBold,
+    )
+
+    if (visiblePoints.isEmpty()) {
+        Text(
+            text = "Waiting for valid scored samples from the last minute.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        return
+    }
+
+    val latestScore = visiblePoints.last().score
+    val minimumScore = visiblePoints.minOf { it.score }
+    val averageScore = visiblePoints.map { it.score }.average().toFloat()
+    val chartBackgroundColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+    val gridColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.18f)
+    val lineColor = MaterialTheme.colorScheme.primary
+    val pointColor = MaterialTheme.colorScheme.primaryContainer
+
+    StatRow("Latest", String.format(Locale.US, "%.1f / 100", latestScore))
+    StatRow("Range", String.format(Locale.US, "%.1f - %.1f", minimumScore, visiblePoints.maxOf { it.score }))
+    StatRow("Average", String.format(Locale.US, "%.1f", averageScore))
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(180.dp)
+            .background(
+                color = chartBackgroundColor,
+                shape = MaterialTheme.shapes.medium,
+            ),
+    ) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(180.dp)
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+        ) {
+            val startTimeEpochMs = currentEpochMs - SCORE_HISTORY_WINDOW_MS
+            val left = 0f
+            val right = size.width
+            val top = 0f
+            val bottom = size.height
+            val chartWidth = (right - left).coerceAtLeast(1f)
+            val chartHeight = (bottom - top).coerceAtLeast(1f)
+
+            listOf(0f, 25f, 50f, 75f, 100f).forEach { score ->
+                val y = top + ((100f - score) / 100f) * chartHeight
+                drawLine(
+                    color = gridColor,
+                    start = Offset(left, y),
+                    end = Offset(right, y),
+                    strokeWidth = 1.dp.toPx(),
+                )
+            }
+
+            val plottedPoints = visiblePoints.map { point ->
+                val normalizedTime = ((point.timestampEpochMs - startTimeEpochMs).toFloat() / SCORE_HISTORY_WINDOW_MS)
+                    .coerceIn(0f, 1f)
+                val x = left + (normalizedTime * chartWidth)
+                val y = top + ((100f - point.score.coerceIn(0f, 100f)) / 100f) * chartHeight
+                Offset(x, y)
+            }
+
+            if (plottedPoints.size > 1) {
+                val linePath = Path().apply {
+                    moveTo(plottedPoints.first().x, plottedPoints.first().y)
+                    plottedPoints.drop(1).forEach { point ->
+                        lineTo(point.x, point.y)
+                    }
+                }
+                drawPath(
+                    path = linePath,
+                    color = lineColor,
+                    style = Stroke(
+                        width = 3.dp.toPx(),
+                        cap = StrokeCap.Round,
+                    ),
+                )
+            }
+
+            plottedPoints.forEach { point ->
+                drawCircle(
+                    color = pointColor,
+                    radius = 4.dp.toPx(),
+                    center = point,
+                )
+                drawCircle(
+                    color = lineColor,
+                    radius = 2.dp.toPx(),
+                    center = point,
+                )
+            }
+        }
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = "60s ago",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = "Now",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

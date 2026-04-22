@@ -7,6 +7,7 @@ import com.example.seniordesignmobileapp.analysis.PostureAlert
 import com.example.seniordesignmobileapp.analysis.PostureAlertCode
 import com.example.seniordesignmobileapp.analysis.PostureAnalysisResult
 import com.example.seniordesignmobileapp.analysis.PostureAnalyzer
+import com.example.seniordesignmobileapp.analysis.PostureScorePoint
 import com.example.seniordesignmobileapp.analysis.SensorAssignment
 import com.example.seniordesignmobileapp.analysis.SensorPlacement
 import com.example.seniordesignmobileapp.analysis.SittingCalibration
@@ -21,6 +22,7 @@ class PostureAnalysisCoordinator(
     private val analyzer: PostureAnalyzer = SittingPostureAnalyzer(),
 ) {
     private val bufferedSamplesBySensor = mutableMapOf<Int, ArrayDeque<BufferedSample>>()
+    private val scoreHistory = ArrayDeque<PostureScorePoint>()
     private val observedSensorIds = linkedSetOf<Int>()
     private var latestNetworkStatus: NetworkStatus? = null
     private var sittingCalibration: SittingCalibration? = null
@@ -74,6 +76,7 @@ class PostureAnalysisCoordinator(
             )
         }
 
+        scoreHistory.clear()
         sittingCalibration = SittingCalibration(
             capturedAtEpochMs = nowEpochMs,
             upperBackSensorId = upperBackSensorId,
@@ -117,6 +120,7 @@ class PostureAnalysisCoordinator(
 
     fun clear() {
         bufferedSamplesBySensor.clear()
+        scoreHistory.clear()
         observedSensorIds.clear()
         latestNetworkStatus = null
         sittingCalibration = null
@@ -133,6 +137,7 @@ class PostureAnalysisCoordinator(
         nowEpochMs: Long,
     ): PostureAnalysisSnapshot {
         pruneExpiredSamples(nowEpochMs)
+        pruneScoreHistory(nowEpochMs)
 
         val sensorAssignments = resolveSensorAssignments()
         val effectiveConfig = config.copy(expectedSensors = sensorAssignments)
@@ -177,6 +182,7 @@ class PostureAnalysisCoordinator(
                 sittingCalibration = sittingCalibration,
                 windowSummary = windowSummary,
                 latestResult = null,
+                scoreHistory = scoreHistory.toList(),
                 calibrationMessage = calibrationMessage,
                 statusMessage = "Waiting for enough live samples to build an analysis window.",
             )
@@ -213,6 +219,14 @@ class PostureAnalysisCoordinator(
             }
         }.distinct()
         val result = baseResult.copy(alerts = augmentedAlerts)
+        val latestSampleEpochMs = timedSamplesBySensor.values
+            .flatten()
+            .maxOfOrNull { it.receivedAtEpochMs }
+        appendScoreHistoryPoint(
+            latestSampleEpochMs = latestSampleEpochMs,
+            result = result,
+            nowEpochMs = nowEpochMs,
+        )
         val statusMessage = when {
             sensorAssignments.size < 2 -> "Waiting to identify two back sensors for sitting analysis."
             coverageMs < minWindowDurationMs -> "Collecting more sample history for the requested analysis window."
@@ -232,6 +246,7 @@ class PostureAnalysisCoordinator(
             sittingCalibration = sittingCalibration,
             windowSummary = windowSummary,
             latestResult = result,
+            scoreHistory = scoreHistory.toList(),
             calibrationMessage = calibrationMessage,
             statusMessage = statusMessage,
         )
@@ -300,6 +315,7 @@ class PostureAnalysisCoordinator(
         message: String,
     ) {
         sittingCalibration = null
+        scoreHistory.clear()
         calibrationMessage = message
     }
 
@@ -329,6 +345,33 @@ class PostureAnalysisCoordinator(
         val earliestSampleEpochMs = sampleTimes.minOrNull() ?: return 0L
         return (windowEndEpochMs - maxOf(windowStartEpochMs, earliestSampleEpochMs)).coerceAtLeast(0L)
     }
+
+    private fun appendScoreHistoryPoint(
+        latestSampleEpochMs: Long?,
+        result: PostureAnalysisResult,
+        nowEpochMs: Long,
+    ) {
+        if (latestSampleEpochMs == null || result.postureState == com.example.seniordesignmobileapp.analysis.PostureState.INCOMPLETE) {
+            return
+        }
+
+        val point = PostureScorePoint(
+            timestampEpochMs = latestSampleEpochMs,
+            score = result.score,
+        )
+        if (scoreHistory.lastOrNull()?.timestampEpochMs == point.timestampEpochMs) {
+            scoreHistory.removeLast()
+        }
+        scoreHistory.addLast(point)
+        pruneScoreHistory(nowEpochMs)
+    }
+
+    private fun pruneScoreHistory(nowEpochMs: Long) {
+        val oldestRetainedEpochMs = nowEpochMs - SCORE_HISTORY_WINDOW_MS
+        while (scoreHistory.isNotEmpty() && scoreHistory.first().timestampEpochMs < oldestRetainedEpochMs) {
+            scoreHistory.removeFirst()
+        }
+    }
 }
 
 data class CalibrationCaptureResult(
@@ -348,6 +391,7 @@ data class PostureAnalysisSnapshot(
     val sittingCalibration: SittingCalibration?,
     val windowSummary: AnalysisWindowSummary,
     val latestResult: PostureAnalysisResult?,
+    val scoreHistory: List<PostureScorePoint>,
     val calibrationMessage: String?,
     val statusMessage: String,
 )
@@ -368,3 +412,5 @@ private fun WindowSpec.minDurationMs(): Long =
         is WindowSpec.FixedDuration -> durationMs
         is WindowSpec.DurationRange -> minDurationMs
     }
+
+private const val SCORE_HISTORY_WINDOW_MS = 60_000L
