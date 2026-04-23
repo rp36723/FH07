@@ -6,15 +6,15 @@ plugins {
 android {
     namespace = "com.example.seniordesignmobileapp"
     compileSdk {
-        version = release(36) {
+        version = release(33) {
             minorApiLevel = 1
         }
     }
 
     defaultConfig {
         applicationId = "com.example.seniordesignmobileapp"
-        minSdk = 34
-        targetSdk = 36
+        minSdk = 33
+        targetSdk = 33
         versionCode = 1
         versionName = "1.0"
 
